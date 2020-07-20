@@ -135,8 +135,9 @@ class Bot:
         recent_changes = self.update_recent_changes(change)
         self.state["recent_changes"] = recent_changes
 
+        chats = {k: v for k, v in self.chats.items() if not delete or (delete and k != chat.id)}
         message_text: str = ""
-        for _, g in groupby(sorted([chat.title for _, chat in self.chats.items() if chat.title]), key=lambda t: t[0]):
+        for _, g in groupby(sorted([chat.title for _, chat in chats.items() if chat.title]), key=lambda t: t[0]):
             message_text += ", ".join(list(g)) + "\n"
 
         if new_title:
@@ -172,6 +173,7 @@ class Bot:
                 update.effective_message.reply_text("Bye bye birdie")
         else:
             self.update_hhh_message(chat, "", delete=True)
+            self.chats.pop(chat.id)
 
     def set_state(self, state: Dict[str, Any]) -> None:
         self.state = state
