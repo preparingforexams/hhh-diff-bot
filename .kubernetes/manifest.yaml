@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hhh-diff-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hhh-diff-bot
+  template:
+    metadata:
+      labels:
+        app: hhh-diff-bot
+    spec:
+      containers:
+      - name: hhh-diff-bot
+        image: torbencarstens/hhh-diff-bot:{{DOCKER_TAG}}
+        imagePullPolicy: Always
+        envFrom:
+          - secretRef:
+              name: hhh-diff-bot-secrets
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hhh-diff-bot-secrets
+type: Opaque
+data:
+  BOT_TOKEN: "{{BOT_TOKEN}}"

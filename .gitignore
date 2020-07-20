@@ -1,0 +1,13 @@
+.idea
+*.iml
+
+secrets.json
+venv
+users.json
+credentials.json
+state.json
+
+__pycache__/
+
+# Documentation (pdoc)
+html

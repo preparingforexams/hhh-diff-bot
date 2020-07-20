@@ -1,0 +1,30 @@
+name: Build/Publish docker image
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Login to dockerhub
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u torbencarstens --password-stdin
+      - name: Get the version
+        id: vars
+        run: echo ::set-output name=tag::$(echo ${GITHUB_SHA})
+      - name: Build the tagged Docker image
+        run: docker build -t torbencarstens/hhh-diff-bot:${{steps.vars.outputs.tag}} .
+      - name: Push the tagged Docker image
+        run: docker push torbencarstens/hhh-diff-bot:${{steps.vars.outputs.tag}}
+      - name: get kube config
+        uses: digitalocean/action-doctl@master
+        env:
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        with:
+          args: kubernetes cluster kubeconfig show torbencarstens > $GITHUB_WORKSPACE/.kubeconfig
+      - name: update BOT_TOKEN
+        run: sed -i -e "s/{{BOT_TOKEN}}/${{ secrets.BOT_TOKEN }}/g" .kubernetes/manifest.yaml
+      - name: update DOCKER_TAG
+        run: sed -i -e "s/{{DOCKER_TAG}}/${{steps.vars.outputs.tag}}/g" .kubernetes/manifest.yaml
+      - name: update image tag
+        run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig apply -f .kubernetes/manifest.yaml
