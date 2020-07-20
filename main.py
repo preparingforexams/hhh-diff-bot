@@ -48,13 +48,9 @@ def start(bot_token: str, state_file: str):
         with open(state_file) as file:
             try:
                 state = json.load(file)
+                bot.set_state(state)
             except json.decoder.JSONDecodeError as e:
                 logger.warning(f"Unable to load previous state: {e}")
-                state = {
-                    "hhh_id": "-1001473841450"
-                }
-
-        bot.set_state(state)
 
     try:
         if sys.argv[1] == "--testrun":

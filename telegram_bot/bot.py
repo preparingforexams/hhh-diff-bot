@@ -36,7 +36,8 @@ class Bot:
         self.state: Dict[str, Any] = {
             "main_id": None,
             "group_message_id": None,
-            "recent_changes": []
+            "recent_changes": [],
+            "hhh_id": "-1001473841450"
         }
         self.logger = create_logger("regular_dicers_bot")
         self.groups = []
