@@ -36,7 +36,7 @@ class Chat:
         self.id: str = _id
         self.bot: TBot = bot
         self.users: Set[User] = set()
-        self.title = None
+        self.title: Optional[str] = None
         self.type = ChatType.UNDEFINED
 
     def get_user_by_id(self, _id: int) -> Optional[User]:

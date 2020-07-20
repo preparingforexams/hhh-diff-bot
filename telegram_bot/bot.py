@@ -1,9 +1,8 @@
-import difflib
 import json
 import tempfile
 from datetime import datetime, timedelta
 from enum import Enum
-from itertools import zip_longest
+from itertools import zip_longest, groupby
 from threading import Timer
 from typing import Any, List, Optional, Dict, Iterable, Tuple
 
@@ -35,7 +34,9 @@ class Bot:
         self.chats: Dict[str, Chat] = {}
         self.updater = updater
         self.state: Dict[str, Any] = {
-            "main_id": None
+            "main_id": None,
+            "group_message_id": None,
+            "recent_changes": []
         }
         self.logger = create_logger("regular_dicers_bot")
         self.groups = []
@@ -116,30 +117,44 @@ class Bot:
 
         return result
 
-    @staticmethod
-    def _is_group_list(message: str) -> bool:
-        initial_list = ['Attraktive Amazon Angebote', 'A wie Apfel', 'Blöde bindungssuchende Bußen', 'BiteMe', 'Besxhte Leute und Hitler/Jesus', 'Bouldern', 'Bahama Neina', 'Cicker', 'Cohle', 'Comedy', 'Diskutable Diskographie Dilatationen', 'Dead Memes at Home', 'Deckpics', 'Deadweight Screenshots', 'Enchilada', 'Fahnenflucht Favoriten', 'Fabrikarbeiter', 'Farfar Bings', 'Friendly Memes', 'birbs and Puppies', 'Gängige GoT glotzer', 'GNTM', 'Heiners himmlischer Helpdesk', 'Innovative Insassen Inserate', 'Intensive Invasionsintrigen', 'Jauchzend jubelnde jecken', 'Ku klux kahn', 'Kapitalgierige Waschbären', 'Kentucky Fried Chicken :poultry_leg:', 'Löschung? Lieber lassen!', 'lecker-leichte Lieblingsrezepte', 'Mutiges Meeresbewohner Mampfen', 'Ñervenaufreibende Ñetflix Ñeuerscheinungen', 'Nicht heulen', 'aber Wein', '', 'Onanierende Orkan Orakel', 'Professionelle Pokémon-Patrouille', 'Professionellere Pokémon-Patrouille', '{Party placeholder}', 'Planschbecken Tauchgang', 'Plauze Lore', 'Potheads', 'Qualitative Quest Querulanten', 'Relevante Rewe Rabatte', 'Super Smash Soldaten', 'Sensationelle Spiele Sonderangebote', 'Sprachnachrichten Schlampen', 'Sitzung geschlossen [Ermittlungen', 'Einsprüche & Edgeworth]', 'T.. T.. Tech', 'Tippspiel', 'Träger des Apfelweins', 'Unglaublich unsinnige Unterhaltungen', 'Umzugsspaß 🥁', 'Vielversprechende Vilm Vorstellungen', 'Verteidiger der erotischen Lochkarte', 'VeteLANen', 'Wagemutige Wandernde Wonneproppen', 'Xtra xtreme xitate', 'Yeast yelling yolo', 'Zerstreute zwischenmenschliche Zivilisten', '', 'Öffentlichkeit', 'Ökonomie und Österreich', ':game_die: Stammgäste']
+    def update_recent_changes(self, update: str) -> List[str]:
+        rc: List[str] = self.state.get("recent_changes", [])
+        if len(rc) > 2:
+            rc.pop()
+        return [update] + rc
 
-        return len(message) > 1000 and len([g for g in initial_list if g in message]) > 6
+    def update_hhh_message(self, chat: Chat, new_title: str, delete=False):
+        change = f"Added {chat.title}"
+        if new_title:
+            change = f"{chat.title} -> {new_title}"
+        elif delete:
+            change = f"Removed {chat.title}"
 
-    def send_group_list_diff(self, chat: Chat, text: str):
-        new_groups = [x.split(", ") for x in text.splitlines()]
-        new_groups = [item.strip() for sublist in new_groups for item in sublist]
-        diff = [x for x in difflib.ndiff(new_groups, self.groups) if x.startswith("- ") or x.startswith("+ ")]
+        recent_changes = self.update_recent_changes(change)
+        self.state["recent_changes"] = recent_changes
 
-        if self.groups:
-            message = "\n".join(diff)
-            self.send_message(chat_id=chat.id, text=message)
+        message_text: str = ""
+        for _, g in groupby(sorted([chat.title for _, chat in self.chats.items() if chat.title]), key=lambda t: t[0]):
+            message_text += ", ".join(list(g)) + "\n"
 
-        self.groups = new_groups
+        if new_title:
+            message_text.replace(chat.title, new_title)
+        message_text += "\n========\n" + "\n".join(recent_changes)
+
+        if not self.state.get("group_message_id", ""):
+            message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
+            self.state["group_message_id"] = message.message_id
+
+            self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
+                                              message_id=self.state["group_message_id"],
+                                              disable_notification=True)
+        else:
+            self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
+                                               message_id=self.state["group_message_id"])
 
     @Command()
     def handle_message(self, update: Update, context: CallbackContext) -> None:
-        chat: Chat = context.chat_data["chat"]
         self.logger.info("Handle message: {}".format(update.effective_message.text))
-
-        if self._is_group_list(update.effective_message.text):
-            self.send_group_list_diff(chat, update.effective_message.text)
 
     @Command()
     def handle_left_chat_member(self, update: Update, context: CallbackContext) -> None:
@@ -153,6 +168,8 @@ class Bot:
             else:
                 chat.users.remove(user)
                 update.effective_message.reply_text("Bye bye birdie")
+        else:
+            self.update_hhh_message(chat, "", delete=True)
 
     def set_state(self, state: Dict[str, Any]) -> None:
         self.state = state
@@ -185,6 +202,8 @@ class Bot:
                 chat.users.add(User.from_tuser(member))
                 message = f"Welcome, fellow 'human' [{member.first_name}](tg://user?id={member.id})"
                 update.effective_message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+            else:
+                self.update_hhh_message(chat, "")
 
     @Command()
     def status(self, update: Update, context: CallbackContext) -> Message:
@@ -323,6 +342,17 @@ class Bot:
                     message = f"{user.name} couldn't be kicked from chat"
                     self.logger.warning(message)
                     update.effective_message.reply_text(message)
+
+    @Command()
+    def new_chat_title(self, update: Update, context: CallbackContext):
+        chat: Chat = context.chat_data["chat"]
+        new_title = update.effective_message.new_chat_title
+
+        self.update_hhh_message(chat, new_title)
+
+    @Command()
+    def chat_created(self, update: Update, context: CallbackContext):
+        self.update_hhh_message(context.chat_data["Chat"], "")
 
 
 def _split_messages(lines):

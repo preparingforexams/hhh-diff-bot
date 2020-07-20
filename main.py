@@ -3,14 +3,9 @@ import sys
 import threading
 
 import sentry_sdk
-from telegram import TelegramError
 from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
 
 from telegram_bot import Bot, create_logger
-
-
-def handle_telegram_error(error: TelegramError):
-    create_logger("handle_telegram_error").error(error)
 
 
 def start(bot_token: str):
@@ -45,11 +40,8 @@ def start(bot_token: str):
     dispatcher.add_handler(
         MessageHandler(Filters.status_update.left_chat_member, bot.handle_left_chat_member))
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, bot.new_member))
-
-    # ErrorHandler
-    dispatcher.add_error_handler(
-        lambda _bot, _update, error: handle_telegram_error(error)
-    )
+    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_title, bot.new_chat_title))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.chat_created, bot.chat_created))
 
     state_file = "state.json"
     logger.debug(f"Read state from {state_file}")
@@ -59,7 +51,9 @@ def start(bot_token: str):
                 state = json.load(file)
             except json.decoder.JSONDecodeError as e:
                 logger.warning(f"Unable to load previous state: {e}")
-                state = {}
+                state = {
+                    "hhh_id": "-1001473841450"
+                }
 
         bot.set_state(state)
 
@@ -86,7 +80,7 @@ def start(bot_token: str):
 if __name__ == "__main__":
     import json
 
-    raw_token = os.getenv("BOT_TOKEN") 
+    raw_token = os.getenv("BOT_TOKEN")
     token = raw_token.strip() if raw_token else None
     sentry_dsn = None
     if not token and os.path.exists("secrets.json"):
