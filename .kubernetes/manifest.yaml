@@ -1,3 +1,23 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hhh-diff-bot-state-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
+  storageClassName: do-block-storage
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hhh-diff-bot-secrets
+type: Opaque
+data:
+  BOT_TOKEN: "{{BOT_TOKEN}}"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,17 +33,16 @@ spec:
         app: hhh-diff-bot
     spec:
       containers:
-      - name: hhh-diff-bot
-        image: torbencarstens/hhh-diff-bot:{{DOCKER_TAG}}
-        imagePullPolicy: Always
-        envFrom:
-          - secretRef:
-              name: hhh-diff-bot-secrets
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: hhh-diff-bot-secrets
-type: Opaque
-data:
-  BOT_TOKEN: "{{BOT_TOKEN}}"
+        - name: hhh-diff-bot
+          image: torbencarstens/hhh-diff-bot:{{DOCKER_TAG}}
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: hhh-diff-bot-secrets
+          volumeMounts:
+            - mountPath: "/data"
+              name: hhh-diff-bot-state-volume
+      volumes:
+        - name: hhh-diff-bot-state-volume
+          persistentVolumeClaim:
+            claimName: hhh-diff-bot-state-pvc

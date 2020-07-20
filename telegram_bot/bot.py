@@ -30,7 +30,7 @@ class SpamType(Enum):
 
 
 class Bot:
-    def __init__(self, updater: Updater):
+    def __init__(self, updater: Updater, state_filepath: str):
         self.chats: Dict[str, Chat] = {}
         self.updater = updater
         self.state: Dict[str, Any] = {
@@ -40,11 +40,12 @@ class Bot:
         }
         self.logger = create_logger("regular_dicers_bot")
         self.groups = []
+        self.state_filepath = state_filepath
 
     def save_state(self) -> None:
         self.state["chats"] = [chat.serialize() for chat in self.chats.values()]
         self.state["groups"] = self.groups
-        with open("state.json", "w+") as f:
+        with open(self.state_filepath, "w+") as f:
             json.dump(self.state, f)
 
     @Command(chat_admin=True)

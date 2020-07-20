@@ -8,12 +8,12 @@ from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
 from telegram_bot import Bot, create_logger
 
 
-def start(bot_token: str):
+def start(bot_token: str, state_file: str):
     logger = create_logger("start")
     logger.debug("Start bot")
 
     updater = Updater(token=bot_token, use_context=True)
-    bot = Bot(updater)
+    bot = Bot(updater, state_file)
 
     dispatcher = updater.dispatcher
 
@@ -43,7 +43,6 @@ def start(bot_token: str):
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_title, bot.new_chat_title))
     dispatcher.add_handler(MessageHandler(Filters.status_update.chat_created, bot.chat_created))
 
-    state_file = "state.json"
     logger.debug(f"Read state from {state_file}")
     if os.path.exists(state_file):
         with open(state_file) as file:
@@ -97,9 +96,10 @@ if __name__ == "__main__":
 
     sentry_sdk.init(sentry_dsn)
 
+    state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
     # noinspection PyBroadException
     try:
-        start(token)
+        start(token, state_filepath)
     except Exception as e:
         sentry_sdk.capture_exception()
         create_logger("__main__").error(e)
