@@ -4,7 +4,7 @@ metadata:
   name: hhh-diff-bot-state-pvc
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 1Mi
