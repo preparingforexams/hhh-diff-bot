@@ -157,7 +157,8 @@ class Bot:
         latest_change = self.create_latest_change_text(chat, new_title, delete)
         self.update_recent_changes(latest_change)
 
-        chat.title = new_title
+        if new_title:
+            chat.title = new_title
         self.chats.update({chat.id: chat})
         group_list_text = self.update_hhh_group_list_text(chat, new_title, delete)
 
