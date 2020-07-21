@@ -153,11 +153,12 @@ class Bot:
             self.update_recent_changes(latest_change)
 
         if new_title:
+            self.logger.debug(f"Update chat.title ({chat.title}) to {new_title}.")
             chat.title = new_title
         self.chats.update({chat.id: chat})
         if delete and chat.id in self.chats.keys():
             self.chats.pop(chat.id)
-        self.logger.debug(f"Build new group list with updated chat title ({new_title})")
+        self.logger.debug(f"Build new group list.")
         group_list_text = self.build_hhh_group_list_text()
 
         message_text = group_list_text + "\n========\n" + "\n".join(self.state["recent_changes"])
