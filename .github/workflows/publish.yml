@@ -15,6 +15,8 @@ jobs:
       - name: Get the version
         id: vars
         run: echo ::set-output name=tag::$(echo ${GITHUB_SHA})
+      - name: update version in telegram_bot/bot.py
+        run: sed -i -e "s/{{VERSION}}/${{steps.vars.outputs.tag}}/" telegram_bot/bot.py
       - name: Build the tagged Docker image
         run: docker build -t torbencarstens/hhh-diff-bot:${{steps.vars.outputs.tag}} .
       - name: Push the tagged Docker image
@@ -31,3 +33,5 @@ jobs:
         run: sed -i -e "s/{{DOCKER_TAG}}/${{steps.vars.outputs.tag}}/g" .kubernetes/manifest.yaml
       - name: update image tag
         run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig apply -f .kubernetes/manifest.yaml
+      - name: Delete old replicaset
+        run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig delete rs -l "app in (hhh-diff-bot), dockertag notin (${{steps.vars.outputs.tag}})"
