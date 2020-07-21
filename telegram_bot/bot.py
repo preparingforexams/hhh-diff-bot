@@ -119,35 +119,48 @@ class Bot:
 
         return result
 
-    def update_recent_changes(self, update: str) -> List[str]:
+    def update_recent_changes(self, update: str):
         rc: List[str] = self.state.get("recent_changes", [])
         if len(rc) > 2:
             rc.pop()
-        return [update] + rc
 
-    def update_hhh_message(self, chat: Chat, new_title: str, delete=False):
+        self.state["recent_changes"] = [update] + rc
+
+    @staticmethod
+    def create_latest_change_text(chat: Chat, new_title: str, delete: bool = False) -> str:
         change = f"Added {chat.title}"
         if new_title:
             change = f"{chat.title} -> {new_title}"
         elif delete:
             change = f"Removed {chat.title}"
 
-        recent_changes = self.update_recent_changes(change)
-        self.state["recent_changes"] = recent_changes
+        return change
 
-        chats = {k: v for k, v in self.chats.items() if not delete or (delete and k != chat.id)}
-        message_text: str = ""
-        for _, g in groupby(sorted([chat for _, chat in chats.items() if chat.title], key=lambda c: c.title.lower()), key=lambda c: c.title[0].lower()):
+    def update_hhh_group_list_text(self, chat: Chat, new_title: str, delete=False) -> str:
+        text: str = ""
+        for _, g in groupby(
+                sorted([chat for _, chat in self.chats.items() if chat.title], key=lambda c: c.title.lower()),
+                key=lambda c: c.title[0].lower()):
             grouped_chats = []
             for grouped_chat in g:
                 if grouped_chat.id == chat.id and new_title:
                     grouped_chats.append(new_title)
+                elif grouped_chat.id == chat.id and delete:
+                    pass
                 else:
                     grouped_chats.append(grouped_chat.title)
 
-            message_text += ", ".join(grouped_chats) + "\n"
+            text += ", ".join(grouped_chats) + "\n"
 
-        message_text += "\n========\n" + "\n".join(recent_changes)
+        return text
+
+    def update_hhh_message(self, chat: Chat, new_title: str, delete=False):
+        latest_change = self.create_latest_change_text(chat, new_title, delete)
+        self.update_recent_changes(latest_change)
+
+        group_list_text = self.update_hhh_group_list_text(chat, new_title, delete)
+
+        message_text = group_list_text + "\n========\n" + "\n".join(self.state["recent_changes"])
 
         if not self.state.get("group_message_id", ""):
             message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
