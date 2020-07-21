@@ -1,5 +1,6 @@
 .idea
 *.iml
+.vscode
 
 secrets.json
 venv
@@ -11,3 +12,6 @@ __pycache__/
 
 # Documentation (pdoc)
 html
+
+# macOS
+.DS_Store
