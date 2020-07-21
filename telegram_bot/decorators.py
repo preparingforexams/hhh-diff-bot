@@ -64,6 +64,9 @@ class Command:
             current_chat = context.chat_data.get("chat")
             if not current_chat:
                 current_chat = self._add_chat(clazz, update, context)
+            if not current_chat.title:
+                current_chat.title = update.effective_chat.title
+
             current_chat.type = update.effective_chat.type
 
             if not clazz.chats.get(current_chat.id):
