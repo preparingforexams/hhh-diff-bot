@@ -137,11 +137,16 @@ class Bot:
 
         chats = {k: v for k, v in self.chats.items() if not delete or (delete and k != chat.id)}
         message_text: str = ""
-        for _, g in groupby(sorted([chat.title for _, chat in chats.items() if chat.title]), key=lambda t: t[0]):
-            message_text += ", ".join(list(g)) + "\n"
+        for _, g in groupby(sorted([chat for _, chat in chats.items() if chat.title], key=lambda c: c.title), key=lambda c: c.title[0]):
+            grouped_chats = []
+            for grouped_chat in g:
+                if grouped_chat.id == chat.id and new_title:
+                    grouped_chats.append(new_title)
+                else:
+                    grouped_chats.append(grouped_chat.title)
 
-        if new_title:
-            message_text.replace(chat.title, new_title)
+            message_text += ", ".join(grouped_chats) + "\n"
+
         message_text += "\n========\n" + "\n".join(recent_changes)
 
         if not self.state.get("group_message_id", ""):
