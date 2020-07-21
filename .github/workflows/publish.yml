@@ -33,3 +33,5 @@ jobs:
         run: sed -i -e "s/{{DOCKER_TAG}}/${{steps.vars.outputs.tag}}/g" .kubernetes/manifest.yaml
       - name: update image tag
         run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig apply -f .kubernetes/manifest.yaml
+      - name: Delete old replicaset
+        run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig delete rs -l "app in (hhh-diff-bot), dockertag notin (${{steps.vars.outputs.tag}})"
