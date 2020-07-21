@@ -136,20 +136,13 @@ class Bot:
 
         return change
 
-    def update_hhh_group_list_text(self, chat: Chat, new_title: str, delete=False) -> str:
+    def update_hhh_group_list_text(self) -> str:
         text: str = ""
 
         for _, g in groupby(
                 sorted([chat for _, chat in self.chats.items() if chat.title], key=lambda c: c.title.lower()),
                 key=lambda c: c.title[0].lower()):
-            grouped_chats = []
-            for grouped_chat in g:
-                if grouped_chat.id == chat.id and delete:
-                    pass
-                else:
-                    grouped_chats.append(grouped_chat.title)
-
-            text += ", ".join(grouped_chats) + "\n"
+            text += ", ".join([chat.title for chat in g]) + "\n"
 
         return text
 
@@ -161,9 +154,12 @@ class Bot:
 
         if new_title:
             chat.title = new_title
-        self.chats.update({chat.id: chat})
+        if delete and chat.id in self.chats.keys():
+            self.chats.pop(chat.id)
+        else:
+            self.chats.update({chat.id: chat})
         self.logger.debug(f"Build new group list with updated chat title ({new_title})")
-        group_list_text = self.update_hhh_group_list_text(chat, new_title, delete)
+        group_list_text = self.update_hhh_group_list_text()
 
         message_text = group_list_text + "\n========\n" + "\n".join(self.state["recent_changes"])
 
