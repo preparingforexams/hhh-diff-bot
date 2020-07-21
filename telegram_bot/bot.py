@@ -202,6 +202,7 @@ class Bot:
         else:
             self.update_hhh_message(chat, "", delete=True)
             self.chats.pop(chat.id)
+            context.chat_data["chat"] = None
 
     def set_state(self, state: Dict[str, Any]) -> None:
         self.state = state
