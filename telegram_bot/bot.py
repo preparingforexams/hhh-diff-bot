@@ -36,7 +36,8 @@ class Bot:
         self.state: Dict[str, Any] = {
             "main_id": None,
             "group_message_id": None,
-            "recent_changes": []
+            "recent_changes": [],
+            "hhh_id": "-1001473841450"
         }
         self.logger = create_logger("regular_dicers_bot")
         self.groups = []
@@ -134,8 +135,9 @@ class Bot:
         recent_changes = self.update_recent_changes(change)
         self.state["recent_changes"] = recent_changes
 
+        chats = {k: v for k, v in self.chats.items() if not delete or (delete and k != chat.id)}
         message_text: str = ""
-        for _, g in groupby(sorted([chat.title for _, chat in self.chats.items() if chat.title]), key=lambda t: t[0]):
+        for _, g in groupby(sorted([chat.title for _, chat in chats.items() if chat.title]), key=lambda t: t[0]):
             message_text += ", ".join(list(g)) + "\n"
 
         if new_title:
@@ -171,6 +173,7 @@ class Bot:
                 update.effective_message.reply_text("Bye bye birdie")
         else:
             self.update_hhh_message(chat, "", delete=True)
+            self.chats.pop(chat.id)
 
     def set_state(self, state: Dict[str, Any]) -> None:
         self.state = state
@@ -179,18 +182,31 @@ class Bot:
     def send_message(self, *args, **kwargs) -> Message:
         return self.updater.bot.send_message(*args, **kwargs)
 
+    def _get_chat_by_title(self, title: str) -> Optional[Chat]:
+        for chat in self.chats.values():
+            if title == chat.title:
+                return chat
+
+        return None
+
     @Command()
     def show_users(self, update: Update, context: CallbackContext) -> Optional[Message]:
-        chat: Chat = context.chat_data["chat"]
+        from_chat: Chat = context.chat_data["chat"]
+        if context.args:
+            search_title = " ".join(context.args).strip()
+            chat: Optional[Chat] = self._get_chat_by_title(search_title)
+            if not chat:
+                return self.send_message(chat_id=from_chat.id, text="This chat doesn't exist")
+        else:
+            chat = from_chat
 
         sorted_users: List[User] = sorted(chat.users, key=lambda _user: _user.name)
-
         if sorted_users:
             message = "\n".join([user.name for user in sorted_users])
         else:
             message = "No active users. Users need to write a message in the chat to be recognized (not just a command)"
 
-        return self.send_message(chat_id=chat.id, text=message)
+        return self.send_message(chat_id=from_chat.id, text=message)
 
     @Command()
     def new_member(self, update: Update, context: CallbackContext) -> None:

@@ -4,10 +4,10 @@ metadata:
   name: hhh-diff-bot-state-pvc
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
-      storage: 1Mi
+      storage: 1Gi
   storageClassName: do-block-storage
 ---
 apiVersion: v1
