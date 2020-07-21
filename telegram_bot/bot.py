@@ -161,8 +161,13 @@ class Bot:
                 # Ignore this exception
                 pass
         else:
-            self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
-                                               message_id=self.state["group_message_id"])
+            try:
+                self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
+                                                   message_id=self.state["group_message_id"])
+            except BadRequest as e:
+                if e.message == "Message to edit not found":
+                    self.state["group_message_id"] = None
+                    self.update_hhh_message(chat, new_title, delete)
 
     @Command()
     def handle_message(self, update: Update, context: CallbackContext) -> None:
