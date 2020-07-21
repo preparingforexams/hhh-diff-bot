@@ -137,7 +137,7 @@ class Bot:
 
         chats = {k: v for k, v in self.chats.items() if not delete or (delete and k != chat.id)}
         message_text: str = ""
-        for _, g in groupby(sorted([chat for _, chat in chats.items() if chat.title], key=lambda c: c.title), key=lambda c: c.title[0]):
+        for _, g in groupby(sorted([chat for _, chat in chats.items() if chat.title], key=lambda c: c.title.lower()), key=lambda c: c.title[0].lower()):
             grouped_chats = []
             for grouped_chat in g:
                 if grouped_chat.id == chat.id and new_title:
