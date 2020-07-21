@@ -366,6 +366,7 @@ class Bot:
         new_title = update.effective_message.new_chat_title
 
         self.update_hhh_message(chat, new_title)
+        chat.title = new_title
 
     @Command()
     def chat_created(self, update: Update, context: CallbackContext):
