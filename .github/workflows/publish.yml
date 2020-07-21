@@ -15,6 +15,8 @@ jobs:
       - name: Get the version
         id: vars
         run: echo ::set-output name=tag::$(echo ${GITHUB_SHA})
+      - name: update version in telegram_bot/bot.py
+        run: sed -i -e "s/{{VERSION}}/${{steps.vars.outputs.tag}}/" telegram_bot/bot.py
       - name: Build the tagged Docker image
         run: docker build -t torbencarstens/hhh-diff-bot:${{steps.vars.outputs.tag}} .
       - name: Push the tagged Docker image
