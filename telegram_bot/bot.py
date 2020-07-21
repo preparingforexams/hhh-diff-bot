@@ -161,7 +161,9 @@ class Bot:
         self.logger.debug(f"Build new group list.")
         group_list_text = self.build_hhh_group_list_text()
 
-        message_text = group_list_text + "\n========\n" + "\n".join(self.state["recent_changes"])
+        total_group_count_text = f"{len(self.chats.keys())} groups in total"
+        message_text = "\n".join(
+            [group_list_text, total_group_count_text, "========", "\n".join(self.state["recent_changes"])])
 
         if not self.state.get("group_message_id", ""):
             self.logger.debug(f"Send a new message ({message_text})")
