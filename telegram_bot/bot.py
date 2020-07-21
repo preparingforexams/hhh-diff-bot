@@ -136,7 +136,7 @@ class Bot:
 
         return change
 
-    def update_hhh_group_list_text(self) -> str:
+    def build_hhh_group_list_text(self) -> str:
         text: str = ""
 
         for _, g in groupby(
@@ -158,7 +158,7 @@ class Bot:
         if delete and chat.id in self.chats.keys():
             self.chats.pop(chat.id)
         self.logger.debug(f"Build new group list with updated chat title ({new_title})")
-        group_list_text = self.update_hhh_group_list_text()
+        group_list_text = self.build_hhh_group_list_text()
 
         message_text = group_list_text + "\n========\n" + "\n".join(self.state["recent_changes"])
 
