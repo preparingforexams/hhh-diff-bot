@@ -204,7 +204,6 @@ class Bot:
                 self.logger.error("Couldn't find user in chat")
             else:
                 chat.users.remove(user)
-                update.effective_message.reply_text("Bye bye birdie")
         else:
             self.update_hhh_message(chat, "", delete=True)
             context.chat_data["chat"] = None
@@ -251,8 +250,6 @@ class Bot:
         for member in update.effective_message.new_chat_members:
             if member.id != self.updater.bot.id:
                 chat.users.add(User.from_tuser(member))
-                message = f"Welcome, fellow 'human' [{member.first_name}](tg://user?id={member.id})"
-                update.effective_message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
             else:
                 self.update_hhh_message(chat, "")
 
