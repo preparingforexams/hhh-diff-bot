@@ -154,10 +154,9 @@ class Bot:
 
         if new_title:
             chat.title = new_title
+        self.chats.update({chat.id: chat})
         if delete and chat.id in self.chats.keys():
             self.chats.pop(chat.id)
-        else:
-            self.chats.update({chat.id: chat})
         self.logger.debug(f"Build new group list with updated chat title ({new_title})")
         group_list_text = self.update_hhh_group_list_text()
 
