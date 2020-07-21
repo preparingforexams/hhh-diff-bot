@@ -142,7 +142,7 @@ class Bot:
         for _, g in groupby(
                 sorted([chat for _, chat in self.chats.items() if chat.title], key=lambda c: c.title.lower()),
                 key=lambda c: c.title[0].lower()):
-            text += ", ".join([chat.title for chat in g]) + "\n"
+            text += " | ".join([chat.title for chat in g]) + "\n"
 
         return text
 
