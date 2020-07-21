@@ -205,7 +205,6 @@ class Bot:
                 update.effective_message.reply_text("Bye bye birdie")
         else:
             self.update_hhh_message(chat, "", delete=True)
-            self.chats.pop(chat.id)
             context.chat_data["chat"] = None
 
     def set_state(self, state: Dict[str, Any]) -> None:
