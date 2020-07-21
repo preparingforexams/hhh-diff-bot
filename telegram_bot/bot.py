@@ -138,14 +138,13 @@ class Bot:
 
     def update_hhh_group_list_text(self, chat: Chat, new_title: str, delete=False) -> str:
         text: str = ""
+
         for _, g in groupby(
                 sorted([chat for _, chat in self.chats.items() if chat.title], key=lambda c: c.title.lower()),
                 key=lambda c: c.title[0].lower()):
             grouped_chats = []
             for grouped_chat in g:
-                if grouped_chat.id == chat.id and new_title:
-                    grouped_chats.append(new_title)
-                elif grouped_chat.id == chat.id and delete:
+                if grouped_chat.id == chat.id and delete:
                     pass
                 else:
                     grouped_chats.append(grouped_chat.title)
@@ -158,6 +157,8 @@ class Bot:
         latest_change = self.create_latest_change_text(chat, new_title, delete)
         self.update_recent_changes(latest_change)
 
+        chat.title = new_title
+        self.chats.update({chat.id: chat})
         group_list_text = self.update_hhh_group_list_text(chat, new_title, delete)
 
         message_text = group_list_text + "\n========\n" + "\n".join(self.state["recent_changes"])
@@ -393,7 +394,6 @@ class Bot:
         new_title = update.effective_message.new_chat_title
 
         self.update_hhh_message(chat, new_title)
-        chat.title = new_title
 
     @Command()
     def chat_created(self, update: Update, context: CallbackContext):
