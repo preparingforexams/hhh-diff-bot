@@ -119,41 +119,73 @@ class Bot:
 
         return result
 
-    def update_recent_changes(self, update: str) -> List[str]:
+    def update_recent_changes(self, update: str):
         rc: List[str] = self.state.get("recent_changes", [])
         if len(rc) > 2:
             rc.pop()
-        return [update] + rc
 
-    def update_hhh_message(self, chat: Chat, new_title: str, delete=False):
+        self.state["recent_changes"] = [update] + rc
+
+    @staticmethod
+    def create_latest_change_text(chat: Chat, new_title: str, delete: bool = False) -> str:
         change = f"Added {chat.title}"
         if new_title:
             change = f"{chat.title} -> {new_title}"
         elif delete:
             change = f"Removed {chat.title}"
 
-        recent_changes = self.update_recent_changes(change)
-        self.state["recent_changes"] = recent_changes
+        return change
 
-        chats = {k: v for k, v in self.chats.items() if not delete or (delete and k != chat.id)}
-        message_text: str = ""
-        for _, g in groupby(sorted([chat.title for _, chat in chats.items() if chat.title]), key=lambda t: t[0]):
-            message_text += ", ".join(list(g)) + "\n"
+    def build_hhh_group_list_text(self) -> str:
+        text: str = ""
+
+        for _, g in groupby(
+                sorted([chat for _, chat in self.chats.items() if chat.title], key=lambda c: c.title.lower()),
+                key=lambda c: c.title[0].lower()):
+            text += ", ".join([chat.title for chat in g]) + "\n"
+
+        return text
+
+    def update_hhh_message(self, chat: Chat, new_title: str, delete=False, retry=False):
+        if not retry:
+            latest_change = self.create_latest_change_text(chat, new_title, delete)
+            self.logger.debug(f"Add latest change {latest_change} to recent_changes")
+            self.update_recent_changes(latest_change)
 
         if new_title:
-            message_text.replace(chat.title, new_title)
-        message_text += "\n========\n" + "\n".join(recent_changes)
+            self.logger.debug(f"Update chat.title ({chat.title}) to {new_title}.")
+            chat.title = new_title
+        self.chats.update({chat.id: chat})
+        if delete and chat.id in self.chats.keys():
+            self.chats.pop(chat.id)
+        self.logger.debug(f"Build new group list.")
+        group_list_text = self.build_hhh_group_list_text()
+
+        message_text = group_list_text + "\n========\n" + "\n".join(self.state["recent_changes"])
 
         if not self.state.get("group_message_id", ""):
+            self.logger.debug(f"Send a new message ({message_text})")
             message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
             self.state["group_message_id"] = message.message_id
 
-            self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
-                                              message_id=self.state["group_message_id"],
-                                              disable_notification=True)
+            try:
+                self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
+                                                  message_id=self.state["group_message_id"],
+                                                  disable_notification=True)
+            except BadRequest:
+                # Ignore this exception
+                pass
         else:
-            self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
-                                               message_id=self.state["group_message_id"])
+            try:
+                self.logger.debug(f"Edit an old message with the new text ({message_text})")
+                self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
+                                                   message_id=self.state["group_message_id"])
+            except BadRequest as e:
+                self.logger.exception("Couldn't edit message", exc_info=True)
+                if e.message == "Message to edit not found":
+                    self.logger.debug("Try sending a new message")
+                    self.state["group_message_id"] = None
+                    return self.update_hhh_message(chat, new_title, delete, retry=True)
 
     @Command()
     def handle_message(self, update: Update, context: CallbackContext) -> None:
@@ -174,6 +206,7 @@ class Bot:
         else:
             self.update_hhh_message(chat, "", delete=True)
             self.chats.pop(chat.id)
+            context.chat_data["chat"] = None
 
     def set_state(self, state: Dict[str, Any]) -> None:
         self.state = state
