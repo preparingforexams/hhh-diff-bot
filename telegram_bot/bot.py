@@ -153,18 +153,22 @@ class Bot:
 
         return text
 
-    def update_hhh_message(self, chat: Chat, new_title: str, delete=False):
-        latest_change = self.create_latest_change_text(chat, new_title, delete)
-        self.update_recent_changes(latest_change)
+    def update_hhh_message(self, chat: Chat, new_title: str, delete=False, retry=False):
+        if not retry:
+            latest_change = self.create_latest_change_text(chat, new_title, delete)
+            self.logger.debug(f"Add latest change {latest_change} to recent_changes")
+            self.update_recent_changes(latest_change)
 
         if new_title:
             chat.title = new_title
         self.chats.update({chat.id: chat})
+        self.logger.debug(f"Build new group list with updated chat title ({new_title})")
         group_list_text = self.update_hhh_group_list_text(chat, new_title, delete)
 
         message_text = group_list_text + "\n========\n" + "\n".join(self.state["recent_changes"])
 
         if not self.state.get("group_message_id", ""):
+            self.logger.debug(f"Send a new message ({message_text})")
             message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
             self.state["group_message_id"] = message.message_id
 
@@ -177,12 +181,15 @@ class Bot:
                 pass
         else:
             try:
+                self.logger.debug(f"Edit an old message with the new text ({message_text})")
                 self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
                                                    message_id=self.state["group_message_id"])
             except BadRequest as e:
+                self.logger.exception("Couldn't edit message", exc_info=True)
                 if e.message == "Message to edit not found":
+                    self.logger.debug("Try sending a new message")
                     self.state["group_message_id"] = None
-                    self.update_hhh_message(chat, new_title, delete)
+                    return self.update_hhh_message(chat, new_title, delete, retry=True)
 
     @Command()
     def handle_message(self, update: Update, context: CallbackContext) -> None:
