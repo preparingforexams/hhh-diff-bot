@@ -153,9 +153,13 @@ class Bot:
             message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
             self.state["group_message_id"] = message.message_id
 
-            self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
-                                              message_id=self.state["group_message_id"],
-                                              disable_notification=True)
+            try:
+                self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
+                                                  message_id=self.state["group_message_id"],
+                                                  disable_notification=True)
+            except BadRequest:
+                # Ignore this exception
+                pass
         else:
             self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
                                                message_id=self.state["group_message_id"])
