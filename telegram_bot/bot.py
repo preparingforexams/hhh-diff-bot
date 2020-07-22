@@ -403,7 +403,7 @@ class Bot:
 
     @Command()
     def chat_created(self, update: Update, context: CallbackContext):
-        self.update_hhh_message(context.chat_data["Chat"], "")
+        self.update_hhh_message(context.chat_data["chat"], "")
 
 
 def _split_messages(lines):
