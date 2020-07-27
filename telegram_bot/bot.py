@@ -206,7 +206,7 @@ class Bot:
                 chat.users.remove(user)
         else:
             self.update_hhh_message(chat, "", delete=True)
-            context.chat_data["chat"] = None
+            context.chat_data.clear()
 
     def set_state(self, state: Dict[str, Any]) -> None:
         self.state = state
@@ -400,7 +400,7 @@ class Bot:
 
     @Command()
     def chat_created(self, update: Update, context: CallbackContext):
-        self.update_hhh_message(context.chat_data["Chat"], "")
+        self.update_hhh_message(context.chat_data["chat"], "")
 
 
 def _split_messages(lines):

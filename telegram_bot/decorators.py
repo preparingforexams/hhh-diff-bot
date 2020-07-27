@@ -19,6 +19,8 @@ class Command:
 
     @staticmethod
     def _add_chat(clazz, update: Update, context: CallbackContext) -> chat.Chat:
+        log = logger.create_logger(f"_add_chat")
+        log.debug(f"Start with {update.effective_chat.id}")
         new_chat = clazz.chats.get(update.effective_chat.id)
         if not new_chat:
             new_chat = chat.Chat(update.effective_chat.id, clazz.updater.bot)
@@ -29,6 +31,7 @@ class Command:
         new_chat.title = update.effective_chat.title
         new_chat.type = update.effective_chat.type
 
+        log.debug(f"End with {new_chat}")
         return new_chat
 
     @staticmethod
@@ -65,6 +68,7 @@ class Command:
             if not current_chat:
                 current_chat = self._add_chat(clazz, update, context)
             if not current_chat.title:
+                log.debug(f"Assign title ({update.effective_chat.title}) to chat ({current_chat}) (previously missing)")
                 current_chat.title = update.effective_chat.title
 
             current_chat.type = update.effective_chat.type
