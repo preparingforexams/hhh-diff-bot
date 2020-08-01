@@ -22,14 +22,15 @@ class Command:
         log = logger.create_logger(f"_add_chat")
         log.debug(f"Start with {update.effective_chat.id}")
         new_chat = clazz.chats.get(update.effective_chat.id)
-        if not new_chat:
+        if new_chat is None:
+            log.debug("Creating new chat")
             new_chat = chat.Chat(update.effective_chat.id, clazz.updater.bot)
+            new_chat.title = update.effective_chat.title
             clazz.chats[new_chat.id] = new_chat
 
-        context.chat_data["chat"] = new_chat
+            log.debug(f"Created new chat ({new_chat})")
 
-        new_chat.title = update.effective_chat.title
-        new_chat.type = update.effective_chat.type
+        context.chat_data["chat"] = new_chat
 
         log.debug(f"End with {new_chat}")
         return new_chat
