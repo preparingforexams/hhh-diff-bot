@@ -68,15 +68,14 @@ class Bot:
                 message = f"{user.name} has been restricted for {datestring}."
                 if reason:
                     message += f"\nReason: {reason}"
-                self.updater.bot.send_message(chat_id=chat_id,
-                                              text=message, disable_notification=True)
+                self.send_message(chat_id=chat_id, text=message, disable_notification=True)
         except TelegramError as e:
             if e.message == "Can't demote chat creator" and not permissions.can_send_messages:
                 message = "Sadly, user {} couldn't be restricted due to: `{}`. Shame on {}".format(user.name,
                                                                                                    e.message,
                                                                                                    user.name)
                 self.logger.debug("{}".format(message))
-                self.updater.bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+                self.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
             self.logger.error(e)
             result = False
 
@@ -161,7 +160,7 @@ class Bot:
         self.logger.debug(f"Build new group list.")
         group_list_text = self.build_hhh_group_list_text()
 
-        total_group_count_text = f"{len(self.chats.keys())} groups in total"
+        total_group_count_text = f"{len([c for c in self.chats.values() if c.title])} groups in total"
         message_text = "\n".join(
             [group_list_text, total_group_count_text, "========", "\n".join(self.state["recent_changes"])])
 
@@ -283,8 +282,7 @@ class Bot:
         if not context.args:
             message = "Please provide a user and an optional timeout (`/mute <user> [<timeout in minutes>] [<reason>]`)"
             self.logger.warning("No arguments have been provided, don't execute `mute`.")
-            return self.updater.bot.send_message(chat_id=update.message.chat_id, text=message,
-                                                 parse_mode=ParseMode.MARKDOWN)
+            return self.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
 
         username = context.args[0]
         minutes = 15
