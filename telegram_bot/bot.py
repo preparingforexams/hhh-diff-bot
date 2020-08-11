@@ -212,8 +212,8 @@ class Bot:
         self.state = state
         self.chats = {schat["id"]: Chat.deserialize(schat, self.updater.bot) for schat in state.get("chats", [])}
 
-    def send_message(self, *args, **kwargs) -> Message:
-        return self.updater.bot.send_message(*args, **kwargs)
+    def send_message(self, *, chat_id: str, text: str, **kwargs) -> Message:
+        return self.updater.bot.send_message(chat_id=chat_id, text=text, disable_web_page_preview=True, **kwargs)
 
     def _get_chat_by_title(self, title: str) -> Optional[Chat]:
         for chat in self.chats.values():
