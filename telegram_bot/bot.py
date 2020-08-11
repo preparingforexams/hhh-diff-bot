@@ -180,7 +180,8 @@ class Bot:
             try:
                 self.logger.debug(f"Edit an old message with the new text ({message_text})")
                 self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
-                                                   message_id=self.state["group_message_id"])
+                                                   message_id=self.state["group_message_id"],
+                                                   disable_web_page_preview=True)
             except BadRequest as e:
                 self.logger.exception("Couldn't edit message", exc_info=True)
                 if e.message == "Message to edit not found":
