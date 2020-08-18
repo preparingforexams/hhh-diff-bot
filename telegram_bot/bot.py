@@ -68,15 +68,14 @@ class Bot:
                 message = f"{user.name} has been restricted for {datestring}."
                 if reason:
                     message += f"\nReason: {reason}"
-                self.updater.bot.send_message(chat_id=chat_id,
-                                              text=message, disable_notification=True)
+                self.send_message(chat_id=chat_id, text=message, disable_notification=True)
         except TelegramError as e:
             if e.message == "Can't demote chat creator" and not permissions.can_send_messages:
                 message = "Sadly, user {} couldn't be restricted due to: `{}`. Shame on {}".format(user.name,
                                                                                                    e.message,
                                                                                                    user.name)
                 self.logger.debug("{}".format(message))
-                self.updater.bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+                self.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
             self.logger.error(e)
             result = False
 
@@ -181,7 +180,8 @@ class Bot:
             try:
                 self.logger.debug(f"Edit an old message with the new text ({message_text})")
                 self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
-                                                   message_id=self.state["group_message_id"])
+                                                   message_id=self.state["group_message_id"],
+                                                   disable_web_page_preview=True)
             except BadRequest as e:
                 self.logger.exception("Couldn't edit message", exc_info=True)
                 if e.message == "Message to edit not found":
@@ -212,8 +212,8 @@ class Bot:
         self.state = state
         self.chats = {schat["id"]: Chat.deserialize(schat, self.updater.bot) for schat in state.get("chats", [])}
 
-    def send_message(self, *args, **kwargs) -> Message:
-        return self.updater.bot.send_message(*args, **kwargs)
+    def send_message(self, *, chat_id: str, text: str, **kwargs) -> Message:
+        return self.updater.bot.send_message(chat_id=chat_id, text=text, disable_web_page_preview=True, **kwargs)
 
     def _get_chat_by_title(self, title: str) -> Optional[Chat]:
         for chat in self.chats.values():
@@ -283,8 +283,7 @@ class Bot:
         if not context.args:
             message = "Please provide a user and an optional timeout (`/mute <user> [<timeout in minutes>] [<reason>]`)"
             self.logger.warning("No arguments have been provided, don't execute `mute`.")
-            return self.updater.bot.send_message(chat_id=update.message.chat_id, text=message,
-                                                 parse_mode=ParseMode.MARKDOWN)
+            return self.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
 
         username = context.args[0]
         minutes = 15
