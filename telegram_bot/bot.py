@@ -31,7 +31,7 @@ class SpamType(Enum):
 
 class Bot:
     def __init__(self, updater: Updater, state_filepath: str):
-        self.chats: Dict[str, Chat] = {}
+        self.chats: Dict[int, Chat] = {}
         self.updater = updater
         self.state: Dict[str, Any] = {
             "main_id": None,
@@ -61,16 +61,16 @@ class Bot:
     @Command(main_admin=True)
     def delete_chat_by_id(self, update: Update, context: CallbackContext) -> Optional[Message]:
         try:
-            chat_id = context.args[0]
-        except IndexError:
-            return update.effective_message.reply_text(text=f"Enter a chat_id as an argument to use this command.")
+            chat_id = int(context.args[0])
+        except (IndexError, ValueError):
+            return update.effective_message.reply_text(text=f"Enter a (valid) chat_id as an argument to use this command.")
 
         try:
             self.chats.pop(chat_id)
         except KeyError:
             return update.effective_message.reply_text(text=f"Not a valid chat_id.")
 
-    def set_user_restriction(self, chat_id: str, user: User, until_date: timedelta, permissions: ChatPermissions,
+    def set_user_restriction(self, chat_id: int, user: User, until_date: timedelta, permissions: ChatPermissions,
                              reason: str = None) -> bool:
         timestamp: int = int((datetime.now() + until_date).timestamp())
         try:
@@ -93,7 +93,7 @@ class Bot:
 
         return result
 
-    def unmute_user(self, chat_id: str, user: User) -> bool:
+    def unmute_user(self, chat_id: int, user: User) -> bool:
         result = False
         permissions = ChatPermissions(can_send_messages=True, can_send_media_messages=True,
                                       can_send_other_messages=True, can_add_web_page_previews=True)
@@ -110,7 +110,7 @@ class Bot:
 
         return result
 
-    def mute_user(self, chat_id: str, user: User, until_date: timedelta, reason: Optional[str] = None) -> bool:
+    def mute_user(self, chat_id: int, user: User, until_date: timedelta, reason: Optional[str] = None) -> bool:
         if user.muted:
             return True
 
@@ -224,7 +224,7 @@ class Bot:
         self.state = state
         self.chats = {schat["id"]: Chat.deserialize(schat, self.updater.bot) for schat in state.get("chats", [])}
 
-    def send_message(self, *, chat_id: str, text: str, **kwargs) -> Message:
+    def send_message(self, *, chat_id: int, text: str, **kwargs) -> Message:
         return self.updater.bot.send_message(chat_id=chat_id, text=text, disable_web_page_preview=True, **kwargs)
 
     def _get_chat_by_title(self, title: str) -> Optional[Chat]:
