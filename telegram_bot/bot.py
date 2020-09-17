@@ -58,6 +58,18 @@ class Bot:
             del self.chats[chat.id]
             del context.chat_data["chat"]
 
+    @Command(main_admin=True)
+    def delete_chat_by_id(self, update: Update, context: CallbackContext) -> Optional[Message]:
+        try:
+            chat_id = context.args[0]
+        except IndexError:
+            return update.effective_message.reply_text(text=f"Enter a chat_id as an argument to use this command.")
+
+        try:
+            self.chats.pop(chat_id)
+        except KeyError:
+            return update.effective_message.reply_text(text=f"Not a valid chat_id.")
+
     def set_user_restriction(self, chat_id: str, user: User, until_date: timedelta, permissions: ChatPermissions,
                              reason: str = None) -> bool:
         timestamp: int = int((datetime.now() + until_date).timestamp())

@@ -1,5 +1,6 @@
 ```
-delete_chat - Deletes all data associated with this chat (admin command)
+delete_chat - Deletes all data associated with this chat (chat admin command)
+delete_chat_by_id - (<chat.id>) Deletes all data associated with the given chat (main admin command)
 status - Returns the chat id ([{id}])
 version - Returns the SHA1 of the current commit
 server_time - Time on the server (debugging purposes)
