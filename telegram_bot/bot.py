@@ -401,6 +401,16 @@ class Bot:
     def chat_created(self, update: Update, context: CallbackContext):
         self.update_hhh_message(context.chat_data["chat"], "")
 
+    @Command()
+    def migrate_chat_id(self, update: Update, context: CallbackContext):
+        self.logger.debug(f"Migrating {update.effective_message}")
+        from_id: str = str(update.effective_message.migrate_from_chat_id)  # should be an int
+        to_id: int = int(update.effective_message.migrate_to_chat_id)  # should already be an int
+
+        self.logger.debug(f"Update chat_id to {to_id} (was: {from_id})")
+        context.chat_data["chat"].id = to_id
+        self.chats[from_id].id = to_id
+
 
 def _split_messages(lines):
     message_length = 1024
