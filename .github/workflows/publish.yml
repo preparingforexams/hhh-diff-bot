@@ -34,5 +34,5 @@ jobs:
         name: apply config
         with:
           kubeconfig: ${{ secrets.K8SCONF }}
-          args: delete rs -l "app in (hhh-diff-bot), dockertag notin (${{steps.vars.outputs.tag}})"
+          args: delete rs -l "app in \(hhh-diff-bot\), dockertag notin \(${{steps.vars.outputs.tag}}\)"
 
