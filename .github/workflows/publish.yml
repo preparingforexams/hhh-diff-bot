@@ -22,7 +22,10 @@ jobs:
       - name: Push the tagged Docker image
         run: docker push torbencarstens/hhh-diff-bot:${{steps.vars.outputs.tag}}
       - name: get kube config
-        run: echo ${{ secrets.K8SCONF }} > $GITHUB_WORKSPACE/.kubeconfig
+        run: 'echo "$K8SCONF" > $GITHUB_WORKSPACE/.kubeconfig'
+        shell: bash
+        env:
+          K8SCONF: ${{ secrets.K8SCONF }}
       - name: update BOT_TOKEN
         run: sed -i -e "s/{{BOT_TOKEN}}/${{ secrets.BOT_TOKEN }}/g" .kubernetes/manifest.yaml
       - name: update DOCKER_TAG
