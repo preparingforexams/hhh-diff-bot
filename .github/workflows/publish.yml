@@ -21,13 +21,18 @@ jobs:
         run: docker build -t torbencarstens/hhh-diff-bot:${{steps.vars.outputs.tag}} .
       - name: Push the tagged Docker image
         run: docker push torbencarstens/hhh-diff-bot:${{steps.vars.outputs.tag}}
-      - name: get kube config
-        run: echo ${{ secrets.K8SCONF }} > $GITHUB_WORKSPACE/.kubeconfig
       - name: update BOT_TOKEN
         run: sed -i -e "s/{{BOT_TOKEN}}/${{ secrets.BOT_TOKEN }}/g" .kubernetes/manifest.yaml
       - name: update DOCKER_TAG
         run: sed -i -e "s/{{DOCKER_TAG}}/${{steps.vars.outputs.tag}}/g" .kubernetes/manifest.yaml
-      - name: update image tag
-        run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig apply -f .kubernetes/manifest.yaml
-      - name: Delete old replicaset
-        run: kubectl --kubeconfig=$GITHUB_WORKSPACE/.kubeconfig delete rs -l "app in (hhh-diff-bot), dockertag notin (${{steps.vars.outputs.tag}})"
+      - uses: danielr1996/kubectl-action@1.0.0
+        name: apply config
+        with:
+          kubeconfig: ${{ secrets.K8SCONF }}
+          args: apply -f .kubernetes/manifest.yaml
+      - uses: danielr1996/kubectl-action@1.0.0
+        name: apply config
+        with:
+          kubeconfig: ${{ secrets.K8SCONF }}
+          args: delete rs -l "app in (hhh-diff-bot), dockertag notin (${{steps.vars.outputs.tag}})"
+
