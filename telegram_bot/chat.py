@@ -38,6 +38,7 @@ class Chat:
         self.users: Set[User] = set()
         self.title: Optional[str] = None
         self.type = ChatType.UNDEFINED
+        self.invite_link: Optional[str] = None
 
     def get_user_by_id(self, _id: int) -> Optional[User]:
         result = next(filter(lambda user: user.id == _id, self.users), None)

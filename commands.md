@@ -8,4 +8,7 @@ get_data - Returns the state representation for the current chat as a file ({cha
 mute - (<user.first_name> [<timeout in minutes>] [<reason>]) Mutes the `user` for the given timeframe (15 minutes if none is given) (admin command)
 unmute - (<user.first_name>) Unmutes the provided `user` (admin command)
 kick - (<user.first_name> [<reason>]) kicks a user from the chat
+add_invite_link - (<invite_link>) Adds an invite link to the group which other users can retrieve
+remove_invite_link - Removes the saved invite link (does nothing when not present)
+get_invite_link - (<group_name>) gets the invite link for the given group (when an invite link is present)
 ```

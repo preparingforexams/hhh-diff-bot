@@ -401,6 +401,47 @@ class Bot:
     def chat_created(self, update: Update, context: CallbackContext):
         self.update_hhh_message(context.chat_data["chat"], "")
 
+    @Command(chat_admin=True)
+    def add_invite_link(self, update: Update, context: CallbackContext):
+        chat: Chat = context.chat_data["chat"]
+        if context.args:
+            invite_link: str = context.args[0]
+        else:
+            return update.effective_message.reply_text("Provide an invite link moron")
+
+        if _validate_invite_link(invite_link):
+            chat.invite_link = invite_link
+            return update.effective_message.reply_text("Added (new) invite link")
+        else:
+            update.effective_message.reply_text("invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...]")
+
+    @Command()
+    def get_invite_link(self, update: Update, context: CallbackContext):
+        if context.args:
+            group_name: str = "".join(context.args[0])
+        else:
+            return update.effective_message.reply_text("Provide a group name moron")
+
+        try:
+            chat: Chat = [c for c in self.chats.values() if c.title == group_name][0]
+        except IndexError:
+            update.effective_message.reply_text("I don't know that group")
+            return
+
+        if chat.invite_link:
+            print("inv")
+            update.effective_message.reply_text(chat.invite_link)
+        else:
+            print("non")
+            update.effective_message.reply_text("No invite link found for the given group")
+
+    @Command(chat_admin=True)
+    def remove_invite_link(self, update: Update, context: CallbackContext):
+        chat: Chat = context.chat_data["chat"]
+        chat.invite_link = context.args[0]
+
+        pass
+
 
 def _split_messages(lines):
     message_length = 1024
@@ -420,3 +461,14 @@ def _split_messages(lines):
             current_message += 1
 
     return messages
+
+
+def _validate_invite_link(link: str) -> bool:
+    import re
+
+    if re.match(r"https://t.me/joinchat/.*", link):
+        return True
+
+    m = re.match(r"tg://join\?invite=.*", link)
+    b = bool(m)
+    return b
