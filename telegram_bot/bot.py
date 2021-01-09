@@ -418,7 +418,7 @@ class Bot:
     @Command()
     def get_invite_link(self, update: Update, context: CallbackContext):
         if context.args:
-            group_name: str = "".join(context.args[0])
+            group_name: str = "".join(context.args)
         else:
             return update.effective_message.reply_text("Provide a group name moron")
 
