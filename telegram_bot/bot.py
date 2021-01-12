@@ -429,10 +429,8 @@ class Bot:
             return
 
         if chat.invite_link:
-            print("inv")
             update.effective_message.reply_text(chat.invite_link)
         else:
-            print("non")
             update.effective_message.reply_text("No invite link found for the given group")
 
     @Command(chat_admin=True)
