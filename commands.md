@@ -8,4 +8,5 @@ get_data - Returns the state representation for the current chat as a file ({cha
 mute - (<user.first_name> [<timeout in minutes>] [<reason>]) Mutes the `user` for the given timeframe (15 minutes if none is given) (admin command)
 unmute - (<user.first_name>) Unmutes the provided `user` (admin command)
 kick - (<user.first_name> [<reason>]) kicks a user from the chat
+renew_diff_message - Sends the diff message to the group again (does not delete the old one)
 ```
