@@ -436,7 +436,7 @@ class Bot:
     @Command(chat_admin=True)
     def remove_invite_link(self, update: Update, context: CallbackContext):
         chat: Chat = context.chat_data["chat"]
-        chat.invite_link = context.args[0]
+        chat.invite_link = None
 
         pass
     @Command()
