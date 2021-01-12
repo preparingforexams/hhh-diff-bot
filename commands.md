@@ -11,4 +11,5 @@ kick - (<user.first_name> [<reason>]) kicks a user from the chat
 add_invite_link - (<invite_link>) Adds an invite link to the group which other users can retrieve
 remove_invite_link - Removes the saved invite link (does nothing when not present)
 get_invite_link - (<group_name>) gets the invite link for the given group (when an invite link is present)
+renew_diff_message - Sends the diff message to the group again (does not delete the old one)
 ```
