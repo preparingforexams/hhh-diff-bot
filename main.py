@@ -30,6 +30,7 @@ def start(bot_token: str, state_file: str):
     dispatcher.add_handler(CommandHandler("kick", bot.kick, pass_args=True))
     dispatcher.add_handler(CommandHandler("add_invite_link", bot.add_invite_link, pass_args=True))
     dispatcher.add_handler(CommandHandler("remove_invite_link", bot.remove_invite_link))
+    dispatcher.add_handler(CommandHandler("renew_diff_message", bot.renew_diff_message))
 
     # Debugging
     dispatcher.add_handler(CommandHandler("status", bot.status))
