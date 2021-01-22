@@ -438,8 +438,6 @@ class Bot:
         chat: Chat = context.chat_data["chat"]
         chat.invite_link = None
 
-        pass
-
     @Command()
     def renew_diff_message(self, update: Update, context: CallbackContext):
         self.state["group_message_id"] = ""
