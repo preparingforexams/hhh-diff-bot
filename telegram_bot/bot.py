@@ -415,6 +415,11 @@ class Bot:
         self.chats[to_id] = new_chat
         self.chats.pop(from_id)
 
+    @Command()
+    def renew_diff_message(self, update: Update, context: CallbackContext):
+        self.state["group_message_id"] = ""
+        self.update_hhh_message(context.chat_data["chat"], "")
+
 
 def _split_messages(lines):
     message_length = 1024

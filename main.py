@@ -27,6 +27,7 @@ def start(bot_token: str, state_file: str):
     dispatcher.add_handler(CommandHandler("mute", bot.mute, pass_args=True))
     dispatcher.add_handler(CommandHandler("unmute", bot.unmute, pass_args=True))
     dispatcher.add_handler(CommandHandler("kick", bot.kick, pass_args=True))
+    dispatcher.add_handler(CommandHandler("renew_diff_message", bot.renew_diff_message))
 
     # Debugging
     dispatcher.add_handler(CommandHandler("status", bot.status))
