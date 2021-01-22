@@ -20,6 +20,7 @@ def start(bot_token: str, state_file: str):
     logger.debug("Register command handlers")
     # CommandHandler
     dispatcher.add_handler(CommandHandler("users", bot.show_users))
+    dispatcher.add_handler(CommandHandler("get_invite_link", bot.get_invite_link, pass_args=True))
 
     # chat_admin
     dispatcher.add_handler(CommandHandler("delete_chat", bot.delete_chat))
@@ -27,6 +28,8 @@ def start(bot_token: str, state_file: str):
     dispatcher.add_handler(CommandHandler("mute", bot.mute, pass_args=True))
     dispatcher.add_handler(CommandHandler("unmute", bot.unmute, pass_args=True))
     dispatcher.add_handler(CommandHandler("kick", bot.kick, pass_args=True))
+    dispatcher.add_handler(CommandHandler("add_invite_link", bot.add_invite_link, pass_args=True))
+    dispatcher.add_handler(CommandHandler("remove_invite_link", bot.remove_invite_link))
     dispatcher.add_handler(CommandHandler("renew_diff_message", bot.renew_diff_message))
 
     # Debugging
