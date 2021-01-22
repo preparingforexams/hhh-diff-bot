@@ -413,7 +413,7 @@ class Bot:
             chat.invite_link = invite_link
             return update.effective_message.reply_text("Added (new) invite link")
         else:
-            update.effective_message.reply_text("invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...]")
+            return update.effective_message.reply_text("invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...]")
 
     @Command()
     def get_invite_link(self, update: Update, context: CallbackContext):
