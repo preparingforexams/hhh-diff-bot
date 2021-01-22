@@ -418,7 +418,7 @@ class Bot:
     @Command()
     def get_invite_link(self, update: Update, context: CallbackContext):
         if context.args:
-            group_name: str = "".join(context.args)
+            group_name: str = " ".join(context.args)
         else:
             return update.effective_message.reply_text("Provide a group name moron")
 
@@ -439,6 +439,7 @@ class Bot:
         chat.invite_link = None
 
         pass
+
     @Command()
     def renew_diff_message(self, update: Update, context: CallbackContext):
         self.state["group_message_id"] = ""
