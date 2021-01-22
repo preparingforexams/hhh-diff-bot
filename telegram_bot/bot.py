@@ -162,7 +162,7 @@ class Bot:
 
         total_group_count_text = f"{len([c for c in self.chats.values() if c.title])} groups in total"
         message_text = "\n".join(
-            [group_list_text, total_group_count_text, "========", "\n".join(self.state["recent_changes"])])
+            [total_group_count_text, group_list_text, "========", "\n".join(self.state["recent_changes"])])
 
         if not self.state.get("group_message_id", ""):
             self.logger.debug(f"Send a new message ({message_text})")
