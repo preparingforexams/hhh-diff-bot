@@ -425,13 +425,12 @@ class Bot:
         try:
             chat: Chat = [c for c in self.chats.values() if c.title == group_name][0]
         except IndexError:
-            update.effective_message.reply_text("I don't know that group")
-            return
+            return update.effective_message.reply_text("I don't know that group")
 
         if chat.invite_link:
-            update.effective_message.reply_text(chat.invite_link)
+            return update.effective_message.reply_text(chat.invite_link)
         else:
-            update.effective_message.reply_text("No invite link found for the given group")
+            return update.effective_message.reply_text("No invite link found for the given group")
 
     @Command(chat_admin=True)
     def remove_invite_link(self, update: Update, context: CallbackContext):
