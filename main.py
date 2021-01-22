@@ -43,6 +43,7 @@ def start(bot_token: str, state_file: str):
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, bot.new_member))
     dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_title, bot.new_chat_title))
     dispatcher.add_handler(MessageHandler(Filters.status_update.chat_created, bot.chat_created))
+    dispatcher.add_handler(MessageHandler(Filters.status_update.migrate, bot.migrate_chat_id))
 
     logger.debug(f"Read state from {state_file}")
     if os.path.exists(state_file):
