@@ -33,7 +33,7 @@ class Chat:
         self.logger = create_logger("chat_{}".format(_id))
         self.logger.debug("Create chat")
         self.pinned_message_id: Optional[int] = None
-        self.id: str = _id
+        self.id: int = int(_id)
         self.bot: TBot = bot
         self.users: Set[User] = set()
         self.title: Optional[str] = None
