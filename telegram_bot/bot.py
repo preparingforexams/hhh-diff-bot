@@ -138,8 +138,8 @@ class Bot:
     def build_hhh_group_list_text(self, prefix: str = "", suffix: str = "") -> List[str]:
         """
         For now, we'll assume that chats starting with the same letter will all fit into a single message
-        :param suffix:
-        :arg prefix: Will throw off the `deductable_per_chat` by `deductable_per_chat`.
+        :param prefix: Put in front of the constructed text for the groups names
+        :param suffix: Put behind of the constructed text for the groups names
         :return: List[str]
         """
         chats = [chat for _, chat in self.chats.items() if chat.title and chat.type != ChatType.PRIVATE]
