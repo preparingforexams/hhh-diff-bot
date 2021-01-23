@@ -136,12 +136,18 @@ class Bot:
         return change
 
     def build_hhh_group_list_text(self) -> str:
+        def chat_to_item(chat: Chat):
+            if chat.invite_link:
+                return f"<a href=\"{chat.invite_link}\">{chat.title}</a>"
+            else:
+                return f"{chat.title}"
+
         text: str = ""
 
         for _, g in groupby(
                 sorted([chat for _, chat in self.chats.items() if chat.title], key=lambda c: c.title.lower()),
                 key=lambda c: c.title[0].lower()):
-            text += " | ".join([chat.title for chat in g]) + "\n"
+            text += " | ".join([chat_to_item(chat) for chat in g]) + "\n"
 
         return text
 
@@ -166,7 +172,8 @@ class Bot:
 
         if not self.state.get("group_message_id", ""):
             self.logger.debug(f"Send a new message ({message_text})")
-            message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
+            message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text,
+                                                 parse_mode=ParseMode.HTML)
             self.state["group_message_id"] = message.message_id
 
             try:
@@ -181,7 +188,8 @@ class Bot:
                 self.logger.debug(f"Edit an old message with the new text ({message_text})")
                 self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
                                                    message_id=self.state["group_message_id"],
-                                                   disable_web_page_preview=True)
+                                                   disable_web_page_preview=True,
+                                                   parse_mode=ParseMode.HTML)
             except BadRequest as e:
                 self.logger.exception("Couldn't edit message", exc_info=True)
                 if e.message == "Message to edit not found":
