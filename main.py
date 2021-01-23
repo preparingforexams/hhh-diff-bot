@@ -21,9 +21,11 @@ def start(bot_token: str, state_file: str):
     # CommandHandler
     dispatcher.add_handler(CommandHandler("users", bot.show_users))
 
+    # main_admin
+    dispatcher.add_handler(CommandHandler("delete_chat_by_id", bot.delete_chat_by_id))
+
     # chat_admin
     dispatcher.add_handler(CommandHandler("delete_chat", bot.delete_chat))
-    dispatcher.add_handler(CommandHandler("delete_chat_by_id", bot.delete_chat_by_id))
     dispatcher.add_handler(CommandHandler("get_data", bot.get_data))
     dispatcher.add_handler(CommandHandler("mute", bot.mute, pass_args=True))
     dispatcher.add_handler(CommandHandler("unmute", bot.unmute, pass_args=True))
