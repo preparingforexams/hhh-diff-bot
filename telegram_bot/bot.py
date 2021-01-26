@@ -39,7 +39,7 @@ class Bot:
             "recent_changes": [],
             "hhh_id": -1001473841450
         }
-        self.logger = create_logger("regular_dicers_bot")
+        self.logger = create_logger("hhh_diff_bot")
         self.groups = []
         self.state_filepath = state_filepath
 
