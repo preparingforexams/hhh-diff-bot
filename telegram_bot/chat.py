@@ -65,7 +65,7 @@ class Chat:
             json_object["id"],
             bot
         )
-        chat.pinned_message_id = json_object.get("pinned_message_id")
+        chat.pinned_message_id = int(json_object.get("pinned_message_id"))
         chat.users = {User.deserialize(user_json_object) for user_json_object in json_object.get("users", [])}
         chat.title = json_object.get("title", None)
         chat.invite_link = json_object.get("invite_link", None)
