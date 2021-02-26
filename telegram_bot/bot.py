@@ -37,9 +37,9 @@ class Bot:
             "main_id": None,
             "group_message_id": None,
             "recent_changes": [],
-            "hhh_id": "-1001473841450"
+            "hhh_id": -1001473841450
         }
-        self.logger = create_logger("regular_dicers_bot")
+        self.logger = create_logger("hhh_diff_bot")
         self.groups = []
         self.state_filepath = state_filepath
 
@@ -176,7 +176,7 @@ class Bot:
         message_text = "\n".join(
             [total_group_count_text, group_list_text, "========", "\n".join(self.state["recent_changes"])])
 
-        if not self.state.get("group_message_id", ""):
+        if not self.state.get("group_message_id"):
             self.logger.debug(f"Send a new message ({message_text})")
             message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
             self.state["group_message_id"] = message.message_id
@@ -186,7 +186,6 @@ class Bot:
                                                   message_id=self.state["group_message_id"],
                                                   disable_notification=True)
             except BadRequest:
-                # Ignore this exception
                 pass
         else:
             try:
@@ -452,8 +451,8 @@ class Bot:
     @Command()
     def migrate_chat_id(self, update: Update, context: CallbackContext):
         self.logger.debug(f"Migrating {update.effective_message}")
-        from_id = str(update.effective_message.migrate_from_chat_id)
-        to_id = str(update.effective_message.migrate_to_chat_id)
+        from_id = int(update.effective_message.migrate_from_chat_id)
+        to_id = int(update.effective_message.migrate_to_chat_id)
 
         self.logger.debug(f"Update chat_id to {to_id} (was: {from_id})")
         new_chat = context.chat_data["chat"]
