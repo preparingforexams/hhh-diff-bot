@@ -106,5 +106,5 @@ if __name__ == "__main__":
         start(token, state_filepath)
     except Exception as e:
         sentry_sdk.capture_exception()
-        create_logger("__main__").error(e)
+        create_logger("__main__").error(e, exc_info=True)
         sys.exit(1)

@@ -60,12 +60,17 @@ class Chat:
         self.users.add(user)
 
     @classmethod
-    def deserialize(cls, json_object: Dict, bot: TBot) -> Chat:
-        chat = Chat(
-            json_object["id"],
-            bot
-        )
-        chat.pinned_message_id = int(json_object.get("pinned_message_id"))
+    def deserialize(cls, json_object: Dict, bot: TBot) -> Optional[Chat]:
+        try:
+            chat = Chat(
+                json_object["id"],
+                bot
+            )
+        except TypeError:
+            create_logger("Chat.deserialize").error("chat_id was None")
+            return None
+        pmi = json_object.get("pinned_message_id", "")
+        chat.pinned_message_id = int(pmi) if pmi else ""
         chat.users = {User.deserialize(user_json_object) for user_json_object in json_object.get("users", [])}
         chat.title = json_object.get("title", None)
         chat.invite_link = json_object.get("invite_link", None)
