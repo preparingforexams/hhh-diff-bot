@@ -66,7 +66,7 @@ class Chat:
                 json_object["id"],
                 bot
             )
-        except TypeError:
+        except (TypeError, ValueError):
             create_logger("Chat.deserialize").error("chat_id was None")
             return None
         pmi = json_object.get("pinned_message_id", "")
