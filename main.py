@@ -8,6 +8,35 @@ from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
 from telegram_bot import Bot, create_logger
 
 
+def cleanup_state(statefile):
+    import json
+
+    # noinspection PyShadowingNames
+    with open(statefile) as f:
+        # noinspection PyShadowingNames
+        content = json.load(f)
+
+    dedup = content.copy()
+    dedup["chats"] = []
+
+    for chat in content["chats"]:
+        chat_id = chat.get("id")
+        if chat_id is None or chat_id == "None":
+            continue
+
+        if isinstance(chat_id, str):
+            if any(c.get("id") == int(chat_id) for c in content["chats"]):
+                continue
+            else:
+                chat["id"] = int(chat_id)
+
+        dedup["chats"].append(chat)
+
+    # noinspection PyShadowingNames
+    with open(statefile, "w") as f:
+        json.dump(dedup, f)
+
+
 def start(bot_token: str, state_file: str):
     logger = create_logger("start")
     logger.debug("Start bot")
@@ -81,6 +110,8 @@ def start(bot_token: str, state_file: str):
 
 
 if __name__ == "__main__":
+    state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
+    cleanup_state(state_filepath)
     import json
 
     raw_token = os.getenv("BOT_TOKEN")
@@ -100,7 +131,6 @@ if __name__ == "__main__":
 
     sentry_sdk.init(sentry_dsn)
 
-    state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
     # noinspection PyBroadException
     try:
         start(token, state_filepath)
