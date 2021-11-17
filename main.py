@@ -21,11 +21,14 @@ def cleanup_state(statefile):
 
     for chat in content["chats"]:
         chat_id = chat.get("id")
+        chat_title = chat.get("title")
         if chat_id is None or chat_id == "None":
             continue
 
         if isinstance(chat_id, str):
             if any(c.get("id") == int(chat_id) for c in content["chats"]):
+                continue
+            elif chat_title and any(c.get("title") == chat_title for c in content["chats"]):
                 continue
             else:
                 chat["id"] = int(chat_id)

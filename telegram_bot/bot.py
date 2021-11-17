@@ -11,7 +11,7 @@ from telegram import ParseMode, TelegramError, Update, Message, ChatPermissions
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext, Updater
 
-from .chat import Chat, User
+from .chat import Chat, User, ChatType
 from .decorators import Command
 from .logger import create_logger
 
@@ -35,7 +35,7 @@ class Bot:
         self.updater = updater
         self.state: Dict[str, Any] = {
             "main_id": None,
-            "group_message_id": None,
+            "group_message_id": [],
             "recent_changes": [],
             "hhh_id": -1001473841450
         }
@@ -147,15 +147,64 @@ class Bot:
 
         return change
 
-    def build_hhh_group_list_text(self) -> str:
-        text: str = ""
+    def build_hhh_group_list_text(self, prefix: str = "", suffix: str = "") -> List[str]:
+        """
+        For now, we'll assume that chats starting with the same letter will all fit into a single message
+        :param prefix: Put in front of the constructed text for the groups names
+        :param suffix: Put behind of the constructed text for the groups names
+        :return: List[str]
+        """
+        chats = [chat for _, chat in self.chats.items() if chat.title and chat.type != ChatType.PRIVATE]
+
+        messages = []
+        message = f"{prefix}\n" if prefix else ""
+        """
+        Telegram counts the character count after entity parsing.
+        i.e. <a href="https://example.com">A</a> should only be one character
+        We need this for the invite links
+        """
+        deductable_per_chat = 0
 
         for _, g in groupby(
                 sorted([chat for _, chat in self.chats.items() if chat and chat.title], key=lambda c: c.title.lower()),
                 key=lambda c: c.title[0].lower()):
-            text += " | ".join([chat.title for chat in g]) + "\n"
+            line = " | ".join([chat.title for chat in g]) + "\n"
+            if len(message) + len(line) - deductable_per_chat * len(list(g)) >= 4096:
+                messages.append(message)
+                message = ""
 
-        return text
+            message += line
+
+        if len(message) + len(suffix) >= 4096:
+            messages.append(message)
+            message = ""
+
+        message += suffix
+        messages.append(message)
+
+        return messages
+
+    @property
+    def group_message_ids(self) -> List:
+        """
+        This is purely for migrative purposes (str -> list)
+
+        :return: List[str]
+        """
+        value = self.state.get("group_message_id", [])
+        if not value:
+            return []
+        elif isinstance(value, str):
+            return [value]
+        else:
+            return value
+
+    @group_message_ids.setter
+    def group_message_ids(self, value: List[str]):
+        self.state["group_message_id"] = value
+
+    def delete_message(self, chat_id: str, message_id: str, *args, **kwargs):
+        return self.updater.bot.delete_message(chat_id=chat_id, message_id=message_id, *args, **kwargs)
 
     def update_hhh_message(self, chat: Chat, new_title: str, delete=False, retry=False):
         if not retry:
@@ -170,35 +219,49 @@ class Bot:
         if delete and chat.id in self.chats.keys():
             self.chats.pop(chat.id)
         self.logger.debug(f"Build new group list.")
-        group_list_text = self.build_hhh_group_list_text()
 
         total_group_count_text = f"{len([c for c in self.chats.values() if c.title])} groups in total"
-        message_text = "\n".join(
-            [total_group_count_text, group_list_text, "========", "\n".join(self.state["recent_changes"])])
+        changes = "\n".join(["========", "\n".join(self.state["recent_changes"])])
+        messages = self.build_hhh_group_list_text(prefix=total_group_count_text, suffix=changes)
 
-        if not self.state.get("group_message_id"):
-            self.logger.debug(f"Send a new message ({message_text})")
-            message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
-            self.state["group_message_id"] = message.message_id
+        diff = len(messages) - len(self.group_message_ids)
+        if diff > 0:
+            # We have to send more messages than before
+            # -> send a new set of messages since we can't insert one into the conversation
+            self.group_message_ids = []
+        elif diff < 0:
+            # We have less messages than before
+            # -> delete the unused ones
+            for message_id in self.group_message_ids[-diff:]:
+                try:
+                    self.delete_message(self.state["hhh_id"], message_id)
+                except BadRequest as e:
+                    self.logger.debug("Exception occured", exc_info=True)
 
-            try:
-                self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
-                                                  message_id=self.state["group_message_id"],
-                                                  disable_notification=True)
-            except BadRequest:
-                pass
-        else:
-            try:
-                self.logger.debug(f"Edit an old message with the new text ({message_text})")
-                self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
-                                                   message_id=self.state["group_message_id"],
-                                                   disable_web_page_preview=True)
-            except BadRequest as e:
-                self.logger.exception("Couldn't edit message", exc_info=True)
-                if e.message == "Message to edit not found":
-                    self.logger.debug("Try sending a new message")
-                    self.state["group_message_id"] = None
-                    return self.update_hhh_message(chat, new_title, delete, retry=True)
+        for index, message_text in enumerate(messages):
+            if not self.group_message_ids or index >= len(self.group_message_ids):
+                self.logger.debug(f"Send {len(messages)} new messages.")
+                message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
+                self.group_message_ids = self.group_message_ids + [message.message_id]
+
+                # try:
+                #     self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
+                #                                       message_id=self.group_message_ids[index],
+                #                                       disable_notification=True)
+                # except BadRequest:
+                #     pass
+            else:
+                try:
+                    self.logger.debug(f"Edit an old message with the new text ({message_text})")
+                    self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
+                                                       message_id=self.group_message_ids[index],
+                                                       disable_web_page_preview=True)
+                except BadRequest as e:
+                    self.logger.exception("Couldn't edit message", exc_info=True)
+                    if e.message == "Message to edit not found":
+                        self.logger.debug("Try sending a new message")
+                        self.group_message_ids = []
+                        return self.update_hhh_message(chat, new_title, delete, retry=True)
 
     @Command()
     def handle_message(self, update: Update, context: CallbackContext) -> None:
@@ -464,12 +527,13 @@ class Bot:
 
     @Command()
     def renew_diff_message(self, update: Update, context: CallbackContext):
-        self.state["group_message_id"] = ""
+        self.group_message_ids = []
+        # retry doesn't update the recent changes
         self.update_hhh_message(context.chat_data["chat"], "", retry=True)
 
 
 def _split_messages(lines):
-    message_length = 1024
+    message_length = 4096
     messages = []
     current_length = 0
     current_message = 0
