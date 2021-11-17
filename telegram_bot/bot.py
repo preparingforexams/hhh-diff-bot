@@ -248,6 +248,7 @@ class Bot:
                 except BadRequest as e:
                     self.logger.debug("Exception occured", exc_info=True)
 
+        pinned = False
         for index, message_text in enumerate(messages):
             if not self.group_message_ids or index >= len(self.group_message_ids):
                 self.logger.debug(f"Send {len(messages)} new messages.")
@@ -255,19 +256,24 @@ class Bot:
                                                      parse_mode=ParseMode.HTML)
                 self.group_message_ids = self.group_message_ids + [message.message_id]
 
-                try:
-                    if self.state.get("pinned_message_id"):
-                        self.updater.bot.unpin_chat_message(chat_id=self.state["hhh_id"],
-                                                            message_id=self.state["pinned_message_id"])
+                if not pinned:
+                    try:
+                        if self.state.get("pinned_message_id"):
+                            try:
+                                self.updater.bot.unpin_chat_message(chat_id=self.state["hhh_id"],
+                                                                    message_id=self.state["pinned_message_id"])
+                            except BadRequest:
+                                self.logger.error("Couldn't unpin message", exc_info=True)
 
-                    self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
-                                                      message_id=self.group_message_ids[0],
-                                                      disable_notification=True)
+                        self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
+                                                          message_id=self.group_message_ids[0],
+                                                          disable_notification=True)
 
-                    self.state["pinned_message_id"] = self.group_message_ids[0]
-                except BadRequest:
-                    self.logger.error("Couldn't pin the message")
-                    pass
+                        self.state["pinned_message_id"] = self.group_message_ids[0]
+                        pinned = True
+                    except BadRequest:
+                        self.logger.error("Couldn't pin the message", exc_info=True)
+                        pass
             else:
                 try:
                     self.logger.debug(f"Edit an old message with the new text ({message_text})")
