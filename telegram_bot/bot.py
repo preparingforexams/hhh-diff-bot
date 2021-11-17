@@ -37,7 +37,8 @@ class Bot:
             "main_id": None,
             "group_message_id": [],
             "recent_changes": [],
-            "hhh_id": -1001473841450
+            "hhh_id": -1001473841450,
+            "pinned_message_id": None
         }
         self.logger = create_logger("hhh_diff_bot")
         self.groups = []
@@ -254,12 +255,19 @@ class Bot:
                                                      parse_mode=ParseMode.HTML)
                 self.group_message_ids = self.group_message_ids + [message.message_id]
 
-                # try:
-                #     self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
-                #                                       message_id=self.group_message_ids[index],
-                #                                       disable_notification=True)
-                # except BadRequest:
-                #     pass
+                try:
+                    if self.state.get("pinned_message_id"):
+                        self.updater.bot.unpin_chat_message(chat_id=self.state["hhh_id"],
+                                                            message_id=self.state["pinned_message_id"])
+
+                    self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
+                                                      message_id=self.group_message_ids[0],
+                                                      disable_notification=True)
+
+                    self.state["pinned_message_id"] = self.group_message_ids[0]
+                except BadRequest:
+                    self.logger.error("Couldn't pin the message")
+                    pass
             else:
                 try:
                     self.logger.debug(f"Edit an old message with the new text ({message_text})")
