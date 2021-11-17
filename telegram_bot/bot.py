@@ -526,8 +526,12 @@ class Bot:
     @Command()
     def migrate_chat_id(self, update: Update, context: CallbackContext):
         self.logger.debug(f"Migrating {update.effective_message}")
+        if not update.effective_message.migrate_from_chat_id:
+            self.logger.warning("Aborting migration since `migrate_from_chat_id` is unset, see #49")
+            return None
+
         from_id = int(update.effective_message.migrate_from_chat_id)
-        to_id = int(update.effective_message.migrate_to_chat_id)
+        to_id = int(update.effective_message.chat.id)
 
         self.logger.debug(f"Update chat_id to {to_id} (was: {from_id})")
         new_chat = context.chat_data["chat"]
