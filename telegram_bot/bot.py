@@ -496,7 +496,9 @@ class Bot:
 
         if _validate_invite_link(invite_link):
             chat.invite_link = invite_link
-            return update.effective_message.reply_text("Added (new) invite link")
+
+            if update.effective_message.reply_text("Added (new) invite link"):
+                self.update_hhh_message(context.chat_data["chat"], "", retry=True)
         else:
             return update.effective_message.reply_text(
                 "invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...]")
@@ -522,6 +524,7 @@ class Bot:
     def remove_invite_link(self, update: Update, context: CallbackContext):
         chat: Chat = context.chat_data["chat"]
         chat.invite_link = None
+        self.update_hhh_message(context.chat_data["chat"], "", retry=True)
 
     @Command()
     def migrate_chat_id(self, update: Update, context: CallbackContext):
