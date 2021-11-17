@@ -100,6 +100,8 @@ class Command:
                 elif current_user in current_chat.administrators():
                     log.debug(
                         f"User ({current_user.name}) is a chat admin and therefore allowed to perform this action, executing")
+                elif update.effective_user.name == "@GroupAnonymousBot" and update.effective_user.is_bot and update.effective_user.link == "https://t.me/GroupAnonymousBot" and update.effective_user.first_name == "Group" and update.effective_user.full_name == "Group":
+                    log.debug("anonymous mode for admins is allowed")
                 else:
                     log.error(
                         f"User ({current_user.name}) isn't a chat_admin and is not allowed to perform this action.")
