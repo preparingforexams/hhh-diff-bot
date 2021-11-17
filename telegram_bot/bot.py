@@ -11,7 +11,7 @@ from telegram import ParseMode, TelegramError, Update, Message, ChatPermissions
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext, Updater
 
-from .chat import Chat, User, ChatType
+from .chat import Chat, User
 from .decorators import Command
 from .logger import create_logger
 
@@ -63,7 +63,8 @@ class Bot:
         try:
             chat_id = int(context.args[0])
         except (IndexError, ValueError):
-            return update.effective_message.reply_text(text=f"Enter a (valid) chat_id as an argument to use this command.")
+            return update.effective_message.reply_text(
+                text=f"Enter a (valid) chat_id as an argument to use this command.")
 
         try:
             self.chats.pop(chat_id)
@@ -154,7 +155,15 @@ class Bot:
         :param suffix: Put behind of the constructed text for the groups names
         :return: List[str]
         """
-        chats = [chat for _, chat in self.chats.items() if chat.title and chat.type != ChatType.PRIVATE]
+
+        def chat_to_item(chat: Chat):
+            try:
+                if chat.invite_link:
+                    return f"<a href=\"{chat.invite_link}\">{chat.title}</a>"
+                else:
+                    return f"{chat.title}"
+            except AttributeError:
+                return f"{chat.title}"
 
         messages = []
         message = f"{prefix}\n" if prefix else ""
@@ -168,7 +177,7 @@ class Bot:
         for _, g in groupby(
                 sorted([chat for _, chat in self.chats.items() if chat and chat.title], key=lambda c: c.title.lower()),
                 key=lambda c: c.title[0].lower()):
-            line = " | ".join([chat.title for chat in g]) + "\n"
+            line = " | ".join([chat_to_item(chat) for chat in g]) + "\n"
             if len(message) + len(line) - deductable_per_chat * len(list(g)) >= 4096:
                 messages.append(message)
                 message = ""
@@ -241,7 +250,8 @@ class Bot:
         for index, message_text in enumerate(messages):
             if not self.group_message_ids or index >= len(self.group_message_ids):
                 self.logger.debug(f"Send {len(messages)} new messages.")
-                message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
+                message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text,
+                                                     parse_mode=ParseMode.HTML)
                 self.group_message_ids = self.group_message_ids + [message.message_id]
 
                 # try:
@@ -255,7 +265,8 @@ class Bot:
                     self.logger.debug(f"Edit an old message with the new text ({message_text})")
                     self.updater.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
                                                        message_id=self.group_message_ids[index],
-                                                       disable_web_page_preview=True)
+                                                       disable_web_page_preview=True,
+                                                       parse_mode=ParseMode.HTML)
                 except BadRequest as e:
                     self.logger.exception("Couldn't edit message", exc_info=True)
                     if e.message == "Message to edit not found":
@@ -487,7 +498,8 @@ class Bot:
             chat.invite_link = invite_link
             return update.effective_message.reply_text("Added (new) invite link")
         else:
-            return update.effective_message.reply_text("invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...]")
+            return update.effective_message.reply_text(
+                "invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...]")
 
     @Command()
     def get_invite_link(self, update: Update, context: CallbackContext):
