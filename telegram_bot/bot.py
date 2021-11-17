@@ -158,7 +158,7 @@ class Bot:
 
         def chat_to_item(chat: Chat):
             try:
-                if chat and chat.invite_link:
+                if chat.invite_link:
                     return f"<a href=\"{chat.invite_link}\">{chat.title}</a>"
                 else:
                     return f"{chat.title}"
