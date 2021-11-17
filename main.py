@@ -28,10 +28,10 @@ def cleanup_state(statefile):
         if isinstance(chat_id, str):
             if any(c.get("id") == int(chat_id) for c in content["chats"]):
                 continue
-            elif chat_title and any(c.get("title") == chat_title for c in content["chats"]):
-                continue
             else:
                 chat["id"] = int(chat_id)
+        elif chat_title and any(c.get("title") == chat_title for c in dedup["chats"]):
+            continue
 
         dedup["chats"].append(chat)
 
