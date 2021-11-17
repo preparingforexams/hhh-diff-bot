@@ -244,12 +244,12 @@ class Bot:
                 message: Message = self.send_message(chat_id=self.state["hhh_id"], text=message_text)
                 self.group_message_ids = self.group_message_ids + [message.message_id]
 
-                try:
-                    self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
-                                                      message_id=self.group_message_ids[index],
-                                                      disable_notification=True)
-                except BadRequest:
-                    pass
+                # try:
+                #     self.updater.bot.pin_chat_message(chat_id=self.state["hhh_id"],
+                #                                       message_id=self.group_message_ids[index],
+                #                                       disable_notification=True)
+                # except BadRequest:
+                #     pass
             else:
                 try:
                     self.logger.debug(f"Edit an old message with the new text ({message_text})")
