@@ -39,6 +39,7 @@ class Chat:
         self.title: Optional[str] = None
         self.type = ChatType.UNDEFINED
         self.invite_link: Optional[str] = None
+        self.description: Optional[str] = None
 
     def get_user_by_id(self, _id: int) -> Optional[User]:
         result = next(filter(lambda user: user.id == _id, self.users), None)
@@ -51,7 +52,8 @@ class Chat:
             "pinned_message_id": self.pinned_message_id,
             "users": [user.serialize() for user in self.users],
             "title": self.title,
-            "invite_link": self.invite_link
+            "invite_link": self.invite_link,
+            "description": self.description,
         }
 
         return serialized
@@ -74,6 +76,7 @@ class Chat:
         chat.users = {User.deserialize(user_json_object) for user_json_object in json_object.get("users", [])}
         chat.title = json_object.get("title", None)
         chat.invite_link = json_object.get("invite_link", None)
+        chat.description = json_object.get("description", None)
 
         return chat
 
