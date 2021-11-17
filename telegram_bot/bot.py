@@ -31,15 +31,15 @@ class SpamType(Enum):
 
 class Bot:
     def __init__(self, updater: Updater, state_filepath: str):
-        self.chats: Dict[str, Chat] = {}
+        self.chats: Dict[int, Chat] = {}
         self.updater = updater
         self.state: Dict[str, Any] = {
             "main_id": None,
             "group_message_id": [],
             "recent_changes": [],
-            "hhh_id": "-1001473841450"
+            "hhh_id": -1001473841450
         }
-        self.logger = create_logger("regular_dicers_bot")
+        self.logger = create_logger("hhh_diff_bot")
         self.groups = []
         self.state_filepath = state_filepath
 
@@ -58,7 +58,19 @@ class Bot:
             del self.chats[chat.id]
             del context.chat_data["chat"]
 
-    def set_user_restriction(self, chat_id: str, user: User, until_date: timedelta, permissions: ChatPermissions,
+    @Command(main_admin=True)
+    def delete_chat_by_id(self, update: Update, context: CallbackContext) -> Optional[Message]:
+        try:
+            chat_id = int(context.args[0])
+        except (IndexError, ValueError):
+            return update.effective_message.reply_text(text=f"Enter a (valid) chat_id as an argument to use this command.")
+
+        try:
+            self.chats.pop(chat_id)
+        except KeyError:
+            return update.effective_message.reply_text(text=f"Not a valid chat_id.")
+
+    def set_user_restriction(self, chat_id: int, user: User, until_date: timedelta, permissions: ChatPermissions,
                              reason: str = None) -> bool:
         timestamp: int = int((datetime.now() + until_date).timestamp())
         try:
@@ -81,7 +93,7 @@ class Bot:
 
         return result
 
-    def unmute_user(self, chat_id: str, user: User) -> bool:
+    def unmute_user(self, chat_id: int, user: User) -> bool:
         result = False
         permissions = ChatPermissions(can_send_messages=True, can_send_media_messages=True,
                                       can_send_other_messages=True, can_add_web_page_previews=True)
@@ -98,7 +110,7 @@ class Bot:
 
         return result
 
-    def mute_user(self, chat_id: str, user: User, until_date: timedelta, reason: Optional[str] = None) -> bool:
+    def mute_user(self, chat_id: int, user: User, until_date: timedelta, reason: Optional[str] = None) -> bool:
         if user.muted:
             return True
 
@@ -154,7 +166,7 @@ class Bot:
         deductable_per_chat = 0
 
         for _, g in groupby(
-                sorted(chats, key=lambda c: c.title.lower()),
+                sorted([chat for _, chat in self.chats.items() if chat and chat.title], key=lambda c: c.title.lower()),
                 key=lambda c: c.title[0].lower()):
             line = " | ".join([chat.title for chat in g]) + "\n"
             if len(message) + len(line) - deductable_per_chat * len(list(g)) >= 4096:
@@ -274,7 +286,7 @@ class Bot:
         self.state = state
         self.chats = {schat["id"]: Chat.deserialize(schat, self.updater.bot) for schat in state.get("chats", [])}
 
-    def send_message(self, *, chat_id: str, text: str, **kwargs) -> Message:
+    def send_message(self, *, chat_id: int, text: str, **kwargs) -> Message:
         return self.updater.bot.send_message(chat_id=chat_id, text=text, disable_web_page_preview=True, **kwargs)
 
     def _get_chat_by_title(self, title: str) -> Optional[Chat]:
@@ -502,8 +514,8 @@ class Bot:
     @Command()
     def migrate_chat_id(self, update: Update, context: CallbackContext):
         self.logger.debug(f"Migrating {update.effective_message}")
-        from_id = str(update.effective_message.migrate_from_chat_id)
-        to_id = str(update.effective_message.migrate_to_chat_id)
+        from_id = int(update.effective_message.migrate_from_chat_id)
+        to_id = int(update.effective_message.migrate_to_chat_id)
 
         self.logger.debug(f"Update chat_id to {to_id} (was: {from_id})")
         new_chat = context.chat_data["chat"]
