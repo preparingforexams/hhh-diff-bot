@@ -71,9 +71,11 @@ class Command:
             if not current_chat.title:
                 log.debug(f"Assign title ({update.effective_chat.title}) to chat ({current_chat}) (previously missing)")
                 current_chat.title = update.effective_chat.title
-            if not current_chat.invite_link and clazz.me().id in [admin.user.id for admin in
-                                                                  current_chat.bot.get_chat_administrators(
-                                                                          chat_id=current_chat.id)]:
+
+            if not current_chat.invite_link \
+                    and current_chat.type != chat.ChatType.PRIVATE and current_chat.type != chat.ChatType.UNDEFINED \
+                    and clazz.me().id in [admin.user.id for admin in
+                                          current_chat.bot.get_chat_administrators(chat_id=current_chat.id)]:
                 log.info(f"creating invite link for {current_chat.title}")
                 current_chat.invite_link = update.effective_chat.create_invite_link().invite_link
                 clazz.update_hhh_message(current_chat, retry=False)
