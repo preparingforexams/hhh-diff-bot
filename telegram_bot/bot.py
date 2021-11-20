@@ -550,6 +550,14 @@ class Bot:
         # retry doesn't update the recent changes
         self.update_hhh_message(context.chat_data["chat"], "", retry=True)
 
+    def me(self):
+        return self.updater.bot.get_me()
+
+    @Command()
+    def noop(self, update: Update, context: CallbackContext):
+        self.logger.debug(update)
+        pass
+
 
 def _split_messages(lines):
     message_length = 4096
