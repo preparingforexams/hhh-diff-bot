@@ -76,6 +76,7 @@ class Command:
                                                                           chat_id=current_chat.id)]:
                 log.info(f"creating invite link for {current_chat.title}")
                 current_chat.invite_link = update.effective_chat.create_invite_link().invite_link
+                clazz.update_hhh_message(current_chat, retry=False)
 
             current_chat.type = update.effective_chat.type
             current_chat.description = update.effective_chat.description

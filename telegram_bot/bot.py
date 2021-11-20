@@ -215,7 +215,7 @@ class Bot:
     def delete_message(self, chat_id: str, message_id: str, *args, **kwargs):
         return self.updater.bot.delete_message(chat_id=chat_id, message_id=message_id, *args, **kwargs)
 
-    def update_hhh_message(self, chat: Chat, new_title: str, delete=False, retry=False):
+    def update_hhh_message(self, chat: Chat, new_title: str = "", delete: bool = False, retry: bool = False):
         if not retry:
             latest_change = self.create_latest_change_text(chat, new_title, delete)
             self.logger.debug(f"Add latest change {latest_change} to recent_changes")
