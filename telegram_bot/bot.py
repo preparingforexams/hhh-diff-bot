@@ -501,7 +501,7 @@ class Bot:
                 self.update_hhh_message(context.chat_data["chat"], "", retry=True)
         else:
             return update.effective_message.reply_text(
-                "invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...]")
+                "invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...] | t.me/[...]")
 
     @Command()
     def get_invite_link(self, update: Update, context: CallbackContext):
@@ -574,7 +574,7 @@ def _split_messages(lines):
 def _validate_invite_link(link: str) -> bool:
     import re
 
-    if re.match(r"https://t.me/joinchat/.*", link):
+    if re.match(r"https://t.me/(joinchat/)?.*", link):
         return True
 
     m = re.match(r"tg://join\?invite=.*", link)
