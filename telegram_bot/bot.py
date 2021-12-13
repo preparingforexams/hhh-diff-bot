@@ -336,7 +336,12 @@ class Bot:
             if member.id != self.updater.bot.id:
                 chat.users.add(User.from_tuser(member))
             else:
-                self.update_hhh_message(chat, "")
+                try:
+                    self.update_hhh_message(context.chat_data["chat"], "")
+                except BadRequest:
+                    self.logger.exception("Failed to update message", exc_info=True)
+
+                self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
 
     @Command()
     def status(self, update: Update, context: CallbackContext) -> Message:
@@ -484,7 +489,12 @@ class Bot:
 
     @Command()
     def chat_created(self, update: Update, context: CallbackContext):
-        self.update_hhh_message(context.chat_data["chat"], "")
+        try:
+            self.update_hhh_message(context.chat_data["chat"], "")
+        except BadRequest:
+            self.logger.exception("Failed to update message", exc_info=True)
+
+        self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
 
     @Command(chat_admin=True)
     def add_invite_link(self, update: Update, context: CallbackContext):
