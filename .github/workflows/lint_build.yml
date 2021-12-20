@@ -9,7 +9,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - run: sed -i -e "s#__TAG__#${GITHUB_SHA}#g" values.yaml
       - uses: WyriHaximus/github-action-helm3@v2
         with:
@@ -21,6 +21,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Build the tagged Docker image
         run: docker build -t ghcr.io/preparingforexams/hhh-diff-bot:${GITHUB_SHA} .
