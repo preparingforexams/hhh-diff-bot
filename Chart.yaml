@@ -1,0 +1,7 @@
+apiVersion: v2
+name: hhh-diff-bot
+description: Deploy hhh-diff-bot
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+icon: https://carstens.tech/helm_icon

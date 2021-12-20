@@ -1,0 +1,26 @@
+name: Build image
+
+on:
+  push:
+    branches:
+      - '!master'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: sed -i -e "s#__TAG__#${GITHUB_SHA}#g" values.yaml
+      - uses: WyriHaximus/github-action-helm3@v2
+        with:
+          exec: helm lint
+      - uses: WyriHaximus/github-action-helm3@v2
+        with:
+          exec: helm lint --strict
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build the tagged Docker image
+        run: docker build -t ghcr.io/preparingforexams/hhh-diff-bot:${GITHUB_SHA} .

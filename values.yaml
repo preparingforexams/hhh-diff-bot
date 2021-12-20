@@ -1,0 +1,26 @@
+namespace: telegram-bots
+
+deployment:
+  name: hhhdiffbot
+  image: ghcr.io/preparingforexams/hhh-diff-bot:__TAG__
+  imagePullPolicy: IfNotPresent
+  revisionHistoryLimit: 1
+  replicas: 1
+  labels:
+    app: hhhdiffbot
+  requests:
+    cpu: 50m
+    memory: 50Mi
+
+volume:
+  name: hhhdiffbot-state
+  path: /data
+
+claim:
+  name: hhhdiffbot-state
+  size: 1Gi
+  accessMode: ReadWriteOnce
+
+secret:
+  name: hhhdiffbot-telegram-token
+  password: __TELEGRAM_TOKEN__
