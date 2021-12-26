@@ -22,6 +22,9 @@ spec:
       - name: {{ .Values.deployment.name }}
         image: {{ .Values.deployment.image }}
         imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+        env:
+          - name: MAIN_ADMIN_IDS
+            value: {{ .Values.telegram.mainAdminIds | toJson | quote }}
         envFrom:
           - secretRef:
               name: {{ .Values.secret.name }}

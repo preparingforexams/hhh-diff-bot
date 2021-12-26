@@ -24,3 +24,8 @@ claim:
 secret:
   name: hhhdiffbot-telegram-token
   password: __TELEGRAM_TOKEN__
+
+telegram:
+  mainAdminIds:
+    - 139656428
+    - 133399998
