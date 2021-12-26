@@ -99,7 +99,7 @@ class Command:
             context.user_data["user"] = current_user
 
             if self.main_admin:
-                if current_chat.id == clazz.state.get("main_id") or current_chat.id == 139656428:
+                if current_chat.id in clazz.main_admin_ids:
                     log.debug("Execute function due to coming from the main_chat")
                 else:
                     message = f"Chat {chat} is not allowed to perform this action."

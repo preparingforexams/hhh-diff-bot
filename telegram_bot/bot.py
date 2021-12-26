@@ -1,10 +1,11 @@
 import json
+import os
 import tempfile
 from datetime import datetime, timedelta
 from enum import Enum
 from itertools import zip_longest, groupby
 from threading import Timer
-from typing import Any, List, Optional, Dict, Iterable, Tuple
+from typing import Any, List, Optional, Dict, Iterable, Tuple, Set
 
 import sentry_sdk
 from telegram import ParseMode, TelegramError, Update, Message, ChatPermissions
@@ -31,18 +32,41 @@ class SpamType(Enum):
 
 class Bot:
     def __init__(self, updater: Updater, state_filepath: str):
+        self.logger = create_logger("hhh_diff_bot")
         self.chats: Dict[int, Chat] = {}
         self.updater = updater
+        self.main_admin_ids: Set[int] = self._load_main_admin_ids()
         self.state: Dict[str, Any] = {
-            "main_id": None,
             "group_message_id": [],
             "recent_changes": [],
             "hhh_id": -1001473841450,
             "pinned_message_id": None
         }
-        self.logger = create_logger("hhh_diff_bot")
         self.groups = []
         self.state_filepath = state_filepath
+
+    def _load_main_admin_ids(self):
+        raw_value = os.getenv("MAIN_ADMIN_IDS")
+        if not raw_value:
+            return set()
+
+        try:
+            id_list = json.loads(raw_value)
+        except ValueError as e:
+            self.logger.error("Could not load main admins", exc_info=e)
+            return set()
+
+        if not isinstance(id_list, list):
+            self.logger.error("MAIN_ADMIN_IDS is not a JSON list")
+            return set()
+
+        result = set()
+        for main_admin_id in id_list:
+            try:
+                result.add(int(main_admin_id))
+            except ValueError:
+                self.logger.error("Not a valid user ID: %s", main_admin_id)
+        return result
 
     def save_state(self) -> None:
         self.state["chats"] = [chat.serialize() for chat in self.chats.values()]
