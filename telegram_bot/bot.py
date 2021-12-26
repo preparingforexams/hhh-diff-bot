@@ -45,9 +45,10 @@ class Bot:
         self.groups = []
         self.state_filepath = state_filepath
 
-    def _load_main_admin_ids(self):
+    def _load_main_admin_ids(self) -> Set[int]:
         raw_value = os.getenv("MAIN_ADMIN_IDS")
         if not raw_value:
+            self.logger.warning("MAIN_ADMIN_IDS is not set!")
             return set()
 
         try:
