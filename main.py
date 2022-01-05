@@ -73,7 +73,6 @@ def start(bot_token: str, state_file: str):
     dispatcher.add_handler(CommandHandler("version", bot.version))
 
     # MessageHandler
-    dispatcher.add_handler(MessageHandler(Filters.command, bot.handle_unknown_command))
     dispatcher.add_handler(
         MessageHandler(Filters.text, bot.handle_message))
     dispatcher.add_handler(
