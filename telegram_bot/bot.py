@@ -470,14 +470,6 @@ class Bot:
             else:
                 update.effective_message.reply_text(f"Failed to unmute {username}.")
 
-    @Command()
-    def handle_unknown_command(self, update: Update, context: CallbackContext):
-        user: User = context.user_data["user"]
-        chat: Chat = context.chat_data["chat"]
-
-        reason = "This is not a valid command fuckwit."
-        self.mute_user(chat_id=chat.id, user=user, until_date=timedelta(minutes=15), reason=reason)
-
     def kick_user(self, chat: Chat, user: User):
         return self.updater.bot.kick_chat_member(chat_id=chat.id, user_id=user.id)
 
