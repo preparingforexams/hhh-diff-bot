@@ -11,6 +11,7 @@ deployment:
   requests:
     cpu: 50m
     memory: 50Mi
+  updateStrategy: Recreate
 
 volume:
   name: hhhdiffbot-state
