@@ -6,6 +6,8 @@ metadata:
 spec:
   revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
   replicas: {{ .Values.deployment.replicas }}
+  strategy:
+    type: {{ .Values.deployment.updateStrategy }}
   selector:
     matchLabels:
       {{- range $k, $v := .Values.deployment.labels }}
