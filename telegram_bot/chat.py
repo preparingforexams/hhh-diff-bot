@@ -175,3 +175,6 @@ class Chat:
 
     def __repr__(self) -> str:
         return f"<{self.id} | {self.title}>"
+
+    def is_group(self) -> bool:
+        return self.type in [ChatType.GROUP, ChatType.SUPERGROUP]
