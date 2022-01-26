@@ -74,7 +74,9 @@ class Command:
                 current_chat.title = update.effective_chat.title
 
             chat_admins = [admin.user.id for admin in current_chat.bot.get_chat_administrators(chat_id=current_chat.id)]
-            bot_is_admin = clazz.me().id in chat_admins
+            bot_id = clazz.me().id
+            bot_is_admin = bot_id in chat_admins
+            log.debug(f"bot id: {bot_id} | admin ids: {chat_admins}")
             is_group_chat = current_chat.is_group()
 
             create_invite_link = not current_chat.invite_link and is_group_chat and bot_is_admin
