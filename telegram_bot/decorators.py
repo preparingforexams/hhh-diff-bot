@@ -73,22 +73,23 @@ class Command:
                 log.debug(f"Assign title ({update.effective_chat.title}) to chat ({current_chat}) (previously missing)")
                 current_chat.title = update.effective_chat.title
 
-            chat_admins = [admin.user.id for admin in current_chat.bot.get_chat_administrators(chat_id=current_chat.id)]
-            bot_id = clazz.me().id
-            bot_is_admin = bot_id in chat_admins
-            log.debug(f"bot id: {bot_id} | admin ids: {chat_admins}")
             is_group_chat = current_chat.is_group()
-
-            create_invite_link = not current_chat.invite_link and is_group_chat and bot_is_admin
-            log.debug(f"invite link create decision: not {current_chat.invite_link} and {is_group_chat} and {bot_is_admin} -> {create_invite_link}")
-            if create_invite_link:
-                log.info(f"creating invite link for {current_chat.title}")
-                try:
-                    current_chat.invite_link = update.effective_chat.create_invite_link().invite_link
-                    clazz.update_hhh_message(current_chat, retry=False)
-                except BadRequest:
-                    log.exception("failed creating invite link or updating message: ", exc_info=True)
-                    pass
+            log.debug(f"Checking for group chat: {is_group_chat}")
+            if is_group_chat:
+                chat_admins = [admin.user.id for admin in current_chat.bot.get_chat_administrators(chat_id=current_chat.id)]
+                bot_id = clazz.me().id
+                bot_is_admin = bot_id in chat_admins
+                log.debug(f"bot id: {bot_id} | admin ids: {chat_admins}")
+                create_invite_link = not current_chat.invite_link and bot_is_admin
+                log.debug(f"invite link create decision: not {current_chat.invite_link} and {bot_is_admin} -> {create_invite_link}")
+                if create_invite_link:
+                    log.info(f"creating invite link for {current_chat.title}")
+                    try:
+                        current_chat.invite_link = update.effective_chat.create_invite_link().invite_link
+                        clazz.update_hhh_message(current_chat, retry=False)
+                    except BadRequest:
+                        log.exception("failed creating invite link or updating message: ", exc_info=True)
+                        pass
 
             current_chat.type = update.effective_chat.type
             current_chat.description = update.effective_chat.description
