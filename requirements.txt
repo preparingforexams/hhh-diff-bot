@@ -1,2 +1,2 @@
 python-telegram-bot==13.11
-sentry-sdk==1.5.6
+sentry-sdk==1.5.7
