@@ -119,7 +119,7 @@ class Command:
             if self.chat_admin:
                 # noinspection PyArgumentList
                 # this is for current_chat.administrators, pycharm believes that the `clz` parameter
-                # for the @group parameter is not present (which is wrong since `current_chat` is the clz parameter
+                # for the @group decorator is not present (which is wrong since `current_chat` is the clz parameter
                 if current_chat.type == chat.ChatType.PRIVATE:
                     log.debug("Execute function due to coming from a private chat")
                 elif current_user in current_chat.administrators():
