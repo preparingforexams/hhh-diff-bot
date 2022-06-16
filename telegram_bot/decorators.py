@@ -90,6 +90,8 @@ class Command:
                     except BadRequest:
                         log.exception("failed creating invite link or updating message: ", exc_info=True)
                         pass
+            else:
+                log.debug(f"chat is not a group chat ({current_chat.type})")
 
             current_chat.type = update.effective_chat.type
             current_chat.description = update.effective_chat.description
