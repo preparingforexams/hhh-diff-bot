@@ -54,6 +54,7 @@ class Chat:
             "title": self.title,
             "invite_link": self.invite_link,
             "description": self.description,
+            "type": self.type,
         }
 
         return serialized
@@ -77,6 +78,7 @@ class Chat:
         chat.title = json_object.get("title", None)
         chat.invite_link = json_object.get("invite_link", None)
         chat.description = json_object.get("description", None)
+        chat.type = json_object.get("type", ChatType.UNDEFINED)
 
         return chat
 
