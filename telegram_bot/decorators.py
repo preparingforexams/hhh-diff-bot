@@ -90,6 +90,8 @@ class Command:
                     except BadRequest:
                         log.exception("failed creating invite link or updating message: ", exc_info=True)
                         pass
+            else:
+                log.debug(f"chat is not a group chat ({current_chat.type})")
 
             current_chat.type = update.effective_chat.type
             current_chat.description = update.effective_chat.description
@@ -115,6 +117,9 @@ class Command:
                     exception = PermissionError()
 
             if self.chat_admin:
+                # noinspection PyArgumentList
+                # this is for current_chat.administrators, pycharm believes that the `clz` parameter
+                # for the @group decorator is not present (which is wrong since `current_chat` is the clz parameter
                 if current_chat.type == chat.ChatType.PRIVATE:
                     log.debug("Execute function due to coming from a private chat")
                 elif current_user in current_chat.administrators():
