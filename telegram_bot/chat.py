@@ -27,6 +27,16 @@ class ChatType(Enum):
 
         return self.value == other
 
+    def serialize(self):
+        return self.value
+
+    @staticmethod
+    def deserialize(string: str):
+        try:
+            return ChatType(string)
+        except ValueError:
+            return ChatType.UNDEFINED
+
 
 class Chat:
     def __init__(self, _id: str, bot: TBot):
@@ -47,6 +57,8 @@ class Chat:
         return result
 
     def serialize(self) -> Dict[str, Any]:
+        type = self.type if isinstance(self.type, ChatType) else ChatType(self.type)
+
         serialized = {
             "id": self.id,
             "pinned_message_id": self.pinned_message_id,
@@ -54,7 +66,7 @@ class Chat:
             "title": self.title,
             "invite_link": self.invite_link,
             "description": self.description,
-            "type": self.type,
+            "type": type.serialize(),
         }
 
         return serialized
@@ -78,7 +90,7 @@ class Chat:
         chat.title = json_object.get("title", None)
         chat.invite_link = json_object.get("invite_link", None)
         chat.description = json_object.get("description", None)
-        chat.type = json_object.get("type", ChatType.UNDEFINED)
+        chat.type = ChatType.deserialize(json_object.get("type", ""))
 
         return chat
 
