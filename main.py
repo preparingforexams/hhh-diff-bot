@@ -2,7 +2,6 @@ import os
 import sys
 import threading
 
-import sentry_sdk
 from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
 
 from telegram_bot import Bot, create_logger
@@ -119,7 +118,6 @@ if __name__ == "__main__":
 
     raw_token = os.getenv("BOT_TOKEN")
     token = raw_token.strip() if raw_token else None
-    sentry_dsn = None
     if not token and os.path.exists("secrets.json"):
         with open("secrets.json") as f:
             content = json.load(f)
@@ -127,17 +125,12 @@ if __name__ == "__main__":
             if not token:
                 raise ValueError("`token` not defined, either set `BOT_TOKEN` or `token` in `secrets.json`")
 
-            sentry_dsn = content.get('sentry_dsn')
-
     if not token:
         raise ValueError("No token has been specified")
-
-    sentry_sdk.init(sentry_dsn)
 
     # noinspection PyBroadException
     try:
         start(token, state_filepath)
     except Exception as e:
-        sentry_sdk.capture_exception()
         create_logger("__main__").error(e, exc_info=True)
         sys.exit(1)

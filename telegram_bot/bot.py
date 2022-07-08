@@ -7,7 +7,6 @@ from itertools import zip_longest, groupby
 from threading import Timer
 from typing import Any, List, Optional, Dict, Iterable, Tuple, Set
 
-import sentry_sdk
 from telegram import ParseMode, TelegramError, Update, Message, ChatPermissions
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext, Updater
@@ -421,7 +420,6 @@ class Bot:
         try:
             minutes = int(context.args[1])
         except (IndexError, ValueError):
-            sentry_sdk.capture_exception()
             self.logger.error("Exception while getting time string from mute command", exc_info=True)
 
         mute_time = timedelta(minutes=minutes)
@@ -430,7 +428,6 @@ class Bot:
         try:
             user = next(filter(lambda x: x.name == username, chat.users))
         except StopIteration:
-            sentry_sdk.capture_exception()
             self.logger.warning(f"Couldn't find user {username} in users for chat {update.message.chat_id}",
                                 exc_info=True)
             update.effective_message.reply_text(f"Can't mute {username} (not found in current chat).")
@@ -460,7 +457,6 @@ class Bot:
         try:
             user = next(filter(lambda x: x.name.lower() == username.lower(), chat.users))
         except StopIteration:
-            sentry_sdk.capture_exception()
             self.logger.warning(f"Couldn't find user {username} in users for chat {update.message.chat_id}",
                                 exc_info=True)
             update.effective_message.reply_text(f"Can't unmute {username} (not found in current chat).")
@@ -488,7 +484,6 @@ class Bot:
         try:
             user: User = next(filter(lambda x: x.name == username, chat.users))
         except StopIteration:
-            sentry_sdk.capture_exception()
             self.logger.warning(f"Couldn't find user {username} in users for chat {update.message.chat_id}",
                                 exc_info=True)
             update.effective_message.reply_text(f"Can't kick {username} (not found in current chat).")
