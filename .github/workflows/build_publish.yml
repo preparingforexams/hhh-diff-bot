@@ -41,6 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: sed -i -e "s/__TELEGRAM_TOKEN__/${{ secrets.BOT_TOKEN }}/g" values.yaml
+      - run: sed -i -e "s/__BING_IMAGE_API_SEARCH_KEY__/${{ secrets.BING_IMAGE_API_SEARCH_KEY }}/g" values.yaml
       - run: sed -i -e "s/__TAG__/${GITHUB_SHA}/g" values.yaml
       - name: install helm chart
         uses: WyriHaximus/github-action-helm3@v2

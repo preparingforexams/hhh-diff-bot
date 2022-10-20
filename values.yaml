@@ -25,6 +25,8 @@ claim:
 secret:
   name: hhhdiffbot-telegram-token
   password: __TELEGRAM_TOKEN__
+  bing:
+    key: __BING_IMAGE_API_SEARCH_KEY__
 
 telegram:
   mainAdminIds:
