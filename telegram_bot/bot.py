@@ -333,9 +333,19 @@ class Bot:
             self.update_hhh_message(chat, "", delete=True)
             context.chat_data.clear()
 
+    def _cleanup_state(self):
+        keys_to_remove = ["main_id", "groups"]
+        for key_to_remove in keys_to_remove:
+            if key_to_remove in self.state:
+                self.state.pop(key_to_remove)
+
+        self.save_state()
+
     def set_state(self, state: Dict[str, Any]) -> None:
         self.state = state
         self.chats = {schat["id"]: Chat.deserialize(schat, self.updater.bot) for schat in state.get("chats", [])}
+
+        self._cleanup_state()
 
     def send_message(self, *, chat_id: int, text: str, **kwargs) -> Message:
         return self.updater.bot.send_message(chat_id=chat_id, text=text, disable_web_page_preview=True, **kwargs)
