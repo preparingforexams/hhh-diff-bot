@@ -7,10 +7,12 @@ from itertools import zip_longest, groupby
 from threading import Timer
 from typing import Any, List, Optional, Dict, Iterable, Tuple, Set
 
+import requests
 from telegram import ParseMode, TelegramError, Update, Message, ChatPermissions
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext, Updater
 
+from .bing_images import search_bing_image
 from .chat import Chat, User
 from .decorators import Command
 from .logger import create_logger
@@ -593,6 +595,22 @@ class Bot:
     def noop(self, update: Update, context: CallbackContext):
         self.logger.debug(update)
         pass
+
+    def set_chat_photo(self, chat: Chat) -> bool:
+        thumbnail_url = search_bing_image(chat.title)
+        if not thumbnail_url:
+            return False
+
+        response = requests.get(thumbnail_url)
+        if not response.ok:
+            self.logger.error(response.status_code, response.content)
+            return False
+
+        photo = response.content
+        if not photo:
+            return False
+
+        return self.updater.bot.set_chat_photo(chat.id, photo)
 
 
 def _split_messages(lines):
