@@ -43,7 +43,6 @@ class Bot:
             "hhh_id": -1001473841450,
             "pinned_message_id": None
         }
-        self.groups = []
         self.state_filepath = state_filepath
 
     def _load_main_admin_ids(self) -> Set[int]:
@@ -72,7 +71,6 @@ class Bot:
 
     def save_state(self) -> None:
         self.state["chats"] = [chat.serialize() for chat in self.chats.values()]
-        self.state["groups"] = self.groups
         with open(self.state_filepath, "w+") as f:
             json.dump(self.state, f)
 
