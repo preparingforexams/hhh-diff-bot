@@ -1,20 +1,34 @@
 import os
 import sys
 import threading
+from typing import Callable, Dict
 
 from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
 
 from telegram_bot import Bot, create_logger
 
 
-def cleanup_state(statefile):
+def update_state(state_filepath: str, *, state_mutation_function: Callable[[Dict, Dict], Dict] = None,
+                 chat_mutation_function: Callable[[Dict, Dict], Dict] = None, **kwargs):
     import json
+    if not state_mutation_function:
+        state_mutation_function = lambda x, _: x
+    if not chat_mutation_function:
+        chat_mutation_function = lambda x, _: x
 
-    # noinspection PyShadowingNames
-    with open(statefile) as f:
-        # noinspection PyShadowingNames
-        content = json.load(f)
+    with open(state_filepath) as f:
+        state = json.load(f)
+    new_chats = []
+    state = state_mutation_function(state, kwargs)
+    for chat in state["chats"]:
+        new_chats.append(chat_mutation_function(chat, kwargs))
 
+    state["chats"] = new_chats
+    with open(state_filepath, "w+") as f:
+        json.dump(state, f)
+
+
+def cleanup_state(content: Dict, **kwargs) -> Dict:
     dedup = content.copy()
     dedup["chats"] = []
 
@@ -34,9 +48,7 @@ def cleanup_state(statefile):
 
         dedup["chats"].append(chat)
 
-    # noinspection PyShadowingNames
-    with open(statefile, "w") as f:
-        json.dump(dedup, f)
+    return dedup
 
 
 def start(bot_token: str, state_file: str):
@@ -128,7 +140,7 @@ def get_token() -> str:
 
 if __name__ == "__main__":
     state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
-    cleanup_state(state_filepath)
+    update_state(state_filepath, state_mutation_function=cleanup_state)
     import json
 
     token = get_token()

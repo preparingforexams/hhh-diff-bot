@@ -7,7 +7,7 @@ from typing import Dict, Optional
 
 import telegram.bot
 
-from main import get_token
+from main import get_token, update_state
 from telegram_bot import create_logger
 from telegram_bot.chat import ChatType
 
@@ -68,6 +68,17 @@ def remind(statefile: str) -> Optional[telegram.Message]:
     return send_reminder(group)
 
 
+def update_last_event_timestamp(chat: Dict, extras: Dict) -> Dict:
+    if chat["id"] == extras["chat_id"]:
+        chat["last_chat_event_isotime"] = datetime.now().isoformat()
+
+    return chat
+
+
 state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
-if not remind(state_filepath):
+result = remind(state_filepath)
+if not result:
     create_logger("reminder").error("failed to send reminder message")
+else:
+    update_state(state_filepath,
+                 chat_mutation_function=lambda c, _: update_last_event_timestamp(c, {"chat_id": result.chat_id}))
