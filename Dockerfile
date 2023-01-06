@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /usr/src/app
 
-PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1
 
 ADD requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
