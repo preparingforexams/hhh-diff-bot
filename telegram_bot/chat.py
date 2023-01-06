@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
 from typing import Optional, Set, List, Dict, Any
 
@@ -50,6 +51,7 @@ class Chat:
         self.type = ChatType.UNDEFINED
         self.invite_link: Optional[str] = None
         self.description: Optional[str] = None
+        self.last_chat_event_isotime: Optional[datetime] = None
 
     def get_user_by_id(self, _id: int) -> Optional[User]:
         result = next(filter(lambda user: user.id == _id, self.users), None)
@@ -67,6 +69,7 @@ class Chat:
             "invite_link": self.invite_link,
             "description": self.description,
             "type": type.serialize(),
+            "last_chat_event_isotime": self.last_chat_event_isotime.isoformat(),
         }
 
         return serialized
@@ -91,6 +94,8 @@ class Chat:
         chat.invite_link = json_object.get("invite_link", None)
         chat.description = json_object.get("description", None)
         chat.type = ChatType.deserialize(json_object.get("type", ""))
+        if last_chat_event_isotime := json_object.get("last_chat_event_isotime", None):
+            chat.last_chat_event_isotime = datetime.fromisoformat(last_chat_event_isotime)
 
         return chat
 
