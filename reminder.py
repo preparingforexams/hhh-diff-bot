@@ -35,7 +35,9 @@ def choose_random_group(state: Dict, age_threshold_days: int) -> Optional[Dict]:
 
 def random_reminder_phrase():
     return random.choice([
-        "Knock Knock"
+        "Knock Knock",
+        "Ich vermisse Leute :(",
+        "Visit my page for exclusive XxX content: definitelynotporn.com",
     ])
 
 
