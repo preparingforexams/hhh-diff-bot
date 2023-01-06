@@ -111,22 +111,27 @@ def start(bot_token: str, state_file: str):
     updater.idle()
 
 
+def get_token() -> str:
+    raw_token = os.getenv("BOT_TOKEN")
+    # noinspection PyShadowingNames
+    token = raw_token.strip() if raw_token else None
+    if not token and os.path.exists("secrets.json"):
+        with open("secrets.json") as f:
+            content = json.load(f)
+            # noinspection PyShadowingNames
+            token = content.get('token', os.getenv("BOT_TOKEN"))
+            if not token:
+                raise ValueError("`token` not defined, either set `BOT_TOKEN` or `token` in `secrets.json`")
+
+    return token
+
+
 if __name__ == "__main__":
     state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
     cleanup_state(state_filepath)
     import json
 
-    raw_token = os.getenv("BOT_TOKEN")
-    token = raw_token.strip() if raw_token else None
-    if not token and os.path.exists("secrets.json"):
-        with open("secrets.json") as f:
-            content = json.load(f)
-            token = content.get('token', os.getenv("BOT_TOKEN"))
-            if not token:
-                raise ValueError("`token` not defined, either set `BOT_TOKEN` or `token` in `secrets.json`")
-
-    if not token:
-        raise ValueError("No token has been specified")
+    token = get_token()
 
     # noinspection PyBroadException
     try:
