@@ -68,8 +68,8 @@ def remind(statefile: str) -> Optional[telegram.Message]:
     return send_reminder(group)
 
 
-def update_last_event_timestamp(chat: Dict, extras: Dict) -> Dict:
-    if chat["id"] == extras["chat_id"]:
+def update_last_event_timestamp(chat: Dict, chat_id: int) -> Dict:
+    if chat["id"] == chat_id:
         chat["last_chat_event_isotime"] = datetime.now().isoformat()
 
     return chat
@@ -81,4 +81,4 @@ if not result:
     create_logger("reminder").error("failed to send reminder message")
 else:
     update_state(state_filepath,
-                 chat_mutation_function=lambda c: update_last_event_timestamp(c, {"chat_id": result.chat_id}))
+                 chat_mutation_function=lambda c: update_last_event_timestamp(c, chat_id=result.chat_id))
