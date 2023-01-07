@@ -94,7 +94,7 @@ class Chat:
         chat.invite_link = json_object.get("invite_link", None)
         chat.description = json_object.get("description", None)
         chat.type = ChatType.deserialize(json_object.get("type", ""))
-        if last_chat_event_isotime := json_object.get("last_chat_event_isotime", None):
+        if last_chat_event_isotime := json_object.get("last_chat_event_isotime"):
             chat.last_chat_event_isotime = datetime.fromisoformat(last_chat_event_isotime)
 
         return chat
