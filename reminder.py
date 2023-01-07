@@ -81,4 +81,4 @@ if not result:
     create_logger("reminder").error("failed to send reminder message")
 else:
     update_state(state_filepath,
-                 chat_mutation_function=lambda c, _: update_last_event_timestamp(c, {"chat_id": result.chat_id}))
+                 chat_mutation_function=lambda c: update_last_event_timestamp(c, {"chat_id": result.chat_id}))
