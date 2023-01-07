@@ -75,10 +75,11 @@ def update_last_event_timestamp(chat: Dict, chat_id: int) -> Dict:
     return chat
 
 
-state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
-result = remind(state_filepath)
-if not result:
-    create_logger("reminder").error("failed to send reminder message")
-else:
-    update_state(state_filepath,
-                 chat_mutation_function=lambda c: update_last_event_timestamp(c, chat_id=result.chat_id))
+if __name__ == "__main__":
+    state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
+    result = remind(state_filepath)
+    if not result:
+        create_logger("reminder").error("failed to send reminder message")
+    else:
+        update_state(state_filepath,
+                     chat_mutation_function=lambda c: update_last_event_timestamp(c, chat_id=result.chat_id))
