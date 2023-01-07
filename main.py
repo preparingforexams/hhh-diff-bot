@@ -12,9 +12,9 @@ def update_state(state_filepath: str, *, state_mutation_function: Callable[[Dict
                  chat_mutation_function: Callable[[Dict], Dict] = None):
     import json
     if not state_mutation_function:
-        state_mutation_function = lambda x, _: x
+        state_mutation_function = lambda x: x
     if not chat_mutation_function:
-        chat_mutation_function = lambda x, _: x
+        chat_mutation_function = lambda x: x
 
     with open(state_filepath) as f:
         state = json.load(f)
