@@ -8,8 +8,8 @@ from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
 from telegram_bot import Bot, create_logger
 
 
-def update_state(state_filepath: str, *, state_mutation_function: Callable[[Dict], Dict] = None,
-                 chat_mutation_function: Callable[[Dict], Dict] = None):
+def update_state(state_filepath: str, *, state_mutation_function: Callable[[Dict], Dict] | None = None,
+                 chat_mutation_function: Callable[[Dict], Dict] | None = None):
     import json
     if not state_mutation_function:
         state_mutation_function = lambda x: x
