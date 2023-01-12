@@ -4,4 +4,4 @@ metadata:
   name: {{ .Values.configmap.name }}
   namespace: {{ .Values.namespace | default .Release.Namespace }}
 data:
-  AGE_THRESHOLD_DAYS: {{ .Values.configmap.ageThresholdDays }}
+  AGE_THRESHOLD_DAYS: {{ .Values.configmap.ageThresholdDays | quote }}
