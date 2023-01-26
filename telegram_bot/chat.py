@@ -59,7 +59,7 @@ class Chat:
         return result
 
     def serialize(self) -> Dict[str, Any]:
-        type = self.type if isinstance(self.type, ChatType) else ChatType(self.type)
+        chat_type = self.type if isinstance(self.type, ChatType) else ChatType(self.type)
 
         serialized = {
             "id": self.id,
@@ -68,7 +68,7 @@ class Chat:
             "title": self.title,
             "invite_link": self.invite_link,
             "description": self.description,
-            "type": type.serialize(),
+            "type": chat_type.serialize(),
             "last_chat_event_isotime": self.last_chat_event_isotime.isoformat(),
         }
 
