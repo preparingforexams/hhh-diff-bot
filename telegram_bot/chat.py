@@ -52,6 +52,7 @@ class Chat:
         self.invite_link: Optional[str] = None
         self.description: Optional[str] = None
         self.last_chat_event_isotime: Optional[datetime] = None
+        self.created_message_id: Optional[int] = None
 
     def get_user_by_id(self, _id: int) -> Optional[User]:
         result = next(filter(lambda user: user.id == _id, self.users), None)
@@ -70,6 +71,7 @@ class Chat:
             "description": self.description,
             "type": chat_type.serialize(),
             "last_chat_event_isotime": self.last_chat_event_isotime.isoformat(),
+            "created_message_id": self.created_message_id,
         }
 
         return serialized
@@ -94,6 +96,7 @@ class Chat:
         chat.invite_link = json_object.get("invite_link", None)
         chat.description = json_object.get("description", None)
         chat.type = ChatType.deserialize(json_object.get("type", ""))
+        chat.created_message_id = json_object.get("created_message_id", None)
         if last_chat_event_isotime := json_object.get("last_chat_event_isotime"):
             chat.last_chat_event_isotime = datetime.fromisoformat(last_chat_event_isotime)
 
