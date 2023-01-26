@@ -534,6 +534,12 @@ class Bot:
 
             if update.effective_message.reply_text("Added (new) invite link"):
                 self.update_hhh_message(context.chat_data["chat"], "", retry=True)
+
+            if chat.created_message_id:
+                text = chat.to_message_entry()
+                self.updater.bot.edit_message_text(text, chat_id=self.state["hhh_id"],
+                                                   message_id=chat.created_message_id,
+                                                   parse_mode=ParseMode.HTML)
         else:
             return update.effective_message.reply_text(
                 "invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...] | t.me/[...]")
