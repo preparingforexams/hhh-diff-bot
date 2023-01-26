@@ -193,7 +193,7 @@ class Bot:
         for _, g in groupby(
                 sorted([chat for _, chat in self.chats.items() if chat and chat.title], key=lambda c: c.title.lower()),
                 key=lambda c: c.title[0].lower()):
-            line = " | ".join([chat_to_item(chat) for chat in g]) + "\n"
+            line = " | ".join([chat.to_message_entry() for chat in g]) + "\n"
             if len(message) + len(line) - deductable_per_chat * len(list(g)) >= 4096:
                 messages.append(message)
                 message = ""
