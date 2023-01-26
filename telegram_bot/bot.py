@@ -181,15 +181,6 @@ class Bot:
         :return: List[str]
         """
 
-        def chat_to_item(chat: Chat):
-            try:
-                if chat.invite_link:
-                    return f"<a href=\"{chat.invite_link}\">{chat.title}</a>"
-                else:
-                    return f"{chat.title}"
-            except AttributeError:
-                return f"{chat.title}"
-
         messages = []
         message = f"{prefix}\n" if prefix else ""
         """

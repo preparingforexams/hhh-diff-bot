@@ -197,3 +197,12 @@ class Chat:
 
     def is_group(self) -> bool:
         return self.type in [ChatType.GROUP, ChatType.SUPERGROUP]
+
+    def to_message_entry(self):
+        try:
+            if self.invite_link:
+                return f"<a href=\"{self.invite_link}\">{self.title}</a>"
+            else:
+                return f"{self.title}"
+        except AttributeError:
+            return f"{self.title}"
