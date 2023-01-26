@@ -181,15 +181,6 @@ class Bot:
         :return: List[str]
         """
 
-        def chat_to_item(chat: Chat):
-            try:
-                if chat.invite_link:
-                    return f"<a href=\"{chat.invite_link}\">{chat.title}</a>"
-                else:
-                    return f"{chat.title}"
-            except AttributeError:
-                return f"{chat.title}"
-
         messages = []
         message = f"{prefix}\n" if prefix else ""
         """
@@ -202,7 +193,7 @@ class Bot:
         for _, g in groupby(
                 sorted([chat for _, chat in self.chats.items() if chat and chat.title], key=lambda c: c.title.lower()),
                 key=lambda c: c.title[0].lower()):
-            line = " | ".join([chat_to_item(chat) for chat in g]) + "\n"
+            line = " | ".join([chat.to_message_entry() for chat in g]) + "\n"
             if len(message) + len(line) - deductable_per_chat * len(list(g)) >= 4096:
                 messages.append(message)
                 message = ""
@@ -364,6 +355,14 @@ class Bot:
 
         return self.send_message(chat_id=from_chat.id, text=message)
 
+    def send_created_message(self, update: Update, context: CallbackContext) -> Message:
+        chat: Chat = context.chat_data["chat"]
+
+        message = self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
+        chat.created_message_id = message.message_id
+
+        return message
+
     @Command()
     def new_member(self, update: Update, context: CallbackContext) -> None:
         chat = context.chat_data["chat"]
@@ -379,7 +378,7 @@ class Bot:
                 except BadRequest:
                     self.logger.exception("Failed to update message", exc_info=True)
 
-                self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
+                self.send_created_message(update, context)
 
     @Command()
     def status(self, update: Update, context: CallbackContext) -> Message:
@@ -520,7 +519,7 @@ class Bot:
         except BadRequest:
             self.logger.exception("Failed to update message", exc_info=True)
 
-        self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
+        self.send_created_message(update, context)
 
     @Command(chat_admin=True)
     def add_invite_link(self, update: Update, context: CallbackContext):
@@ -535,6 +534,12 @@ class Bot:
 
             if update.effective_message.reply_text("Added (new) invite link"):
                 self.update_hhh_message(context.chat_data["chat"], "", retry=True)
+
+            if chat.created_message_id:
+                text = f"Created {chat.to_message_entry()}"
+                self.updater.bot.edit_message_text(text, chat_id=self.state["hhh_id"],
+                                                   message_id=chat.created_message_id,
+                                                   parse_mode=ParseMode.HTML)
         else:
             return update.effective_message.reply_text(
                 "invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...] | t.me/[...]")

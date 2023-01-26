@@ -51,7 +51,8 @@ class Chat:
         self.type = ChatType.UNDEFINED
         self.invite_link: Optional[str] = None
         self.description: Optional[str] = None
-        self.last_chat_event_isotime: Optional[datetime] = None
+        self.last_chat_event_time: Optional[datetime] = None
+        self.created_message_id: Optional[int] = None
 
     def get_user_by_id(self, _id: int) -> Optional[User]:
         result = next(filter(lambda user: user.id == _id, self.users), None)
@@ -59,7 +60,8 @@ class Chat:
         return result
 
     def serialize(self) -> Dict[str, Any]:
-        type = self.type if isinstance(self.type, ChatType) else ChatType(self.type)
+        chat_type = self.type if isinstance(self.type, ChatType) else ChatType(self.type)
+        last_chat_event_isotime = self.last_chat_event_time.isoformat() if self.last_chat_event_time else None
 
         serialized = {
             "id": self.id,
@@ -68,8 +70,9 @@ class Chat:
             "title": self.title,
             "invite_link": self.invite_link,
             "description": self.description,
-            "type": type.serialize(),
-            "last_chat_event_isotime": self.last_chat_event_isotime.isoformat(),
+            "type": chat_type.serialize(),
+            "last_chat_event_isotime": last_chat_event_isotime,
+            "created_message_id": self.created_message_id,
         }
 
         return serialized
@@ -94,8 +97,9 @@ class Chat:
         chat.invite_link = json_object.get("invite_link", None)
         chat.description = json_object.get("description", None)
         chat.type = ChatType.deserialize(json_object.get("type", ""))
-        if last_chat_event_isotime := json_object.get("last_chat_event_isotime"):
-            chat.last_chat_event_isotime = datetime.fromisoformat(last_chat_event_isotime)
+        chat.created_message_id = json_object.get("created_message_id", None)
+        if last_chat_event_time := json_object.get("last_chat_event_isotime"):
+            chat.last_chat_event_time = datetime.fromisoformat(last_chat_event_time)
 
         return chat
 
@@ -197,3 +201,12 @@ class Chat:
 
     def is_group(self) -> bool:
         return self.type in [ChatType.GROUP, ChatType.SUPERGROUP]
+
+    def to_message_entry(self):
+        try:
+            if self.invite_link:
+                return f"<a href=\"{self.invite_link}\">{self.title}</a>"
+            else:
+                return f"{self.title}"
+        except AttributeError:
+            return f"{self.title}"

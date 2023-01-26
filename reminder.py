@@ -70,7 +70,7 @@ def remind(statefile: str) -> Optional[telegram.Message]:
 
 def update_last_event_timestamp(chat: Dict, chat_id: int) -> Dict:
     if chat["id"] == chat_id:
-        chat["last_chat_event_isotime"] = datetime.now().isoformat()
+        chat["last_chat_event_isotime"] = datetime.now()
 
     return chat
 
