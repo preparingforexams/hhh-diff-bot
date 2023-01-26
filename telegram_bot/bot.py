@@ -356,7 +356,7 @@ class Bot:
         return self.send_message(chat_id=from_chat.id, text=message)
 
     def send_created_message(self, update: Update, context: CallbackContext) -> Message:
-        chat: Chat = context.chat_data["context"]
+        chat: Chat = context.chat_data["chat"]
 
         message = self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
         chat.created_message_id = message.message_id
@@ -536,7 +536,7 @@ class Bot:
                 self.update_hhh_message(context.chat_data["chat"], "", retry=True)
 
             if chat.created_message_id:
-                text = chat.to_message_entry()
+                text = f"Created {chat.to_message_entry()}"
                 self.updater.bot.edit_message_text(text, chat_id=self.state["hhh_id"],
                                                    message_id=chat.created_message_id,
                                                    parse_mode=ParseMode.HTML)

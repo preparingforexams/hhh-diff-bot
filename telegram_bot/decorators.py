@@ -74,7 +74,7 @@ class Command:
             if not current_chat.title:
                 log.debug(f"Assign title ({update.effective_chat.title}) to chat ({current_chat}) (previously missing)")
                 current_chat.title = update.effective_chat.title
-            current_chat.last_chat_event_isotime = datetime.now()
+            current_chat.last_chat_event_time = datetime.now()
 
             is_group_chat = current_chat.is_group()
             log.debug(f"Checking for group chat: {is_group_chat}")
