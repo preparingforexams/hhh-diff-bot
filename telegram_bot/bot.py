@@ -355,6 +355,14 @@ class Bot:
 
         return self.send_message(chat_id=from_chat.id, text=message)
 
+    def send_created_message(self, update: Update, context: CallbackContext) -> Message:
+        chat: Chat = context.chat_data["context"]
+
+        message = self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
+        chat.created_message_id = message.message_id
+
+        return message
+
     @Command()
     def new_member(self, update: Update, context: CallbackContext) -> None:
         chat = context.chat_data["chat"]
@@ -370,7 +378,7 @@ class Bot:
                 except BadRequest:
                     self.logger.exception("Failed to update message", exc_info=True)
 
-                self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
+                self.send_created_message(update, context)
 
     @Command()
     def status(self, update: Update, context: CallbackContext) -> Message:
@@ -511,7 +519,7 @@ class Bot:
         except BadRequest:
             self.logger.exception("Failed to update message", exc_info=True)
 
-        self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
+        self.send_created_message(update, context)
 
     @Command(chat_admin=True)
     def add_invite_link(self, update: Update, context: CallbackContext):
