@@ -3,7 +3,8 @@ import sys
 import threading
 from typing import Callable, Dict
 
-from telegram.ext import CommandHandler, Updater, MessageHandler, Filters
+from telegram.ext import CommandHandler, MessageHandler, filters
+from telegram.ext._applicationbuilder import ApplicationBuilder
 
 from telegram_bot import Bot, create_logger
 
@@ -55,44 +56,39 @@ def start(bot_token: str, state_file: str):
     logger = create_logger("start")
     logger.debug("Start bot")
 
-    updater = Updater(token=bot_token, use_context=True)
-    bot = Bot(updater, state_file)
-
-    dispatcher = updater.dispatcher
+    application = ApplicationBuilder().token(bot_token).build()
+    bot = Bot(application, state_file)
 
     logger.debug("Register command handlers")
     # CommandHandler
-    dispatcher.add_handler(CommandHandler("users", bot.show_users))
-    dispatcher.add_handler(CommandHandler("get_invite_link", bot.get_invite_link, pass_args=True))
+    application.add_handler(CommandHandler("users", bot.show_users))
+    application.add_handler(CommandHandler("get_invite_link", bot.get_invite_link))
 
     # main_admin
-    dispatcher.add_handler(CommandHandler("delete_chat_by_id", bot.delete_chat_by_id))
+    application.add_handler(CommandHandler("delete_chat_by_id", bot.delete_chat_by_id))
 
     # chat_admin
-    dispatcher.add_handler(CommandHandler("delete_chat", bot.delete_chat))
-    dispatcher.add_handler(CommandHandler("get_data", bot.get_data))
-    dispatcher.add_handler(CommandHandler("mute", bot.mute, pass_args=True))
-    dispatcher.add_handler(CommandHandler("unmute", bot.unmute, pass_args=True))
-    dispatcher.add_handler(CommandHandler("kick", bot.kick, pass_args=True))
-    dispatcher.add_handler(CommandHandler("add_invite_link", bot.add_invite_link, pass_args=True))
-    dispatcher.add_handler(CommandHandler("remove_invite_link", bot.remove_invite_link))
-    dispatcher.add_handler(CommandHandler("renew_diff_message", bot.renew_diff_message))
+    application.add_handler(CommandHandler("delete_chat", bot.delete_chat))
+    application.add_handler(CommandHandler("get_data", bot.get_data))
+    application.add_handler(CommandHandler("mute", bot.mute))
+    application.add_handler(CommandHandler("unmute", bot.unmute))
+    application.add_handler(CommandHandler("kick", bot.kick))
+    application.add_handler(CommandHandler("add_invite_link", bot.add_invite_link))
+    application.add_handler(CommandHandler("remove_invite_link", bot.remove_invite_link))
+    application.add_handler(CommandHandler("renew_diff_message", bot.renew_diff_message))
 
     # Debugging
-    dispatcher.add_handler(CommandHandler("status", bot.status))
-    dispatcher.add_handler(CommandHandler("server_time", bot.server_time))
-    dispatcher.add_handler(CommandHandler("version", bot.version))
+    application.add_handler(CommandHandler("status", bot.status))
+    application.add_handler(CommandHandler("server_time", bot.server_time))
+    application.add_handler(CommandHandler("version", bot.version))
 
-    # MessageHandler
-    dispatcher.add_handler(
-        MessageHandler(Filters.text, bot.handle_message))
-    dispatcher.add_handler(
-        MessageHandler(Filters.status_update.left_chat_member, bot.handle_left_chat_member))
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_members, bot.new_member))
-    dispatcher.add_handler(MessageHandler(Filters.status_update.new_chat_title, bot.new_chat_title))
-    dispatcher.add_handler(MessageHandler(Filters.status_update.chat_created, bot.chat_created))
-    dispatcher.add_handler(MessageHandler(Filters.status_update.migrate, bot.migrate_chat_id))
-    dispatcher.add_handler(MessageHandler(Filters.all, bot.noop))
+    application.add_handler(
+        MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, bot.handle_left_chat_member))
+    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, bot.new_member))
+    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_TITLE, bot.new_chat_title))
+    application.add_handler(MessageHandler(filters.StatusUpdate.CHAT_CREATED, bot.chat_created))
+    application.add_handler(MessageHandler(filters.StatusUpdate.MIGRATE, bot.migrate_chat_id))
+    application.add_handler(MessageHandler(filters.ALL, bot.noop))
 
     logger.debug(f"Read state from {state_file}")
     if os.path.exists(state_file):
@@ -109,8 +105,8 @@ def start(bot_token: str, state_file: str):
 
             def _exit():
                 logger.info("Exiting")
-                updater.stop()
-                updater.is_idle = False
+                application.stop()
+                application.is_idle = False
 
             timer = threading.Timer(5, _exit)
             timer.setDaemon(True)
@@ -119,8 +115,7 @@ def start(bot_token: str, state_file: str):
         pass
 
     logger.info("Running")
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 
 def get_token() -> str:

@@ -6,7 +6,8 @@ from typing import Optional, Set, List, Dict, Any
 
 from telegram import Bot as TBot, Update
 from telegram import Chat as TChat
-from telegram import Message, TelegramError
+from telegram.error import TelegramError
+from telegram._message import Message
 
 from .decorators import group
 from .logger import create_logger
@@ -40,7 +41,7 @@ class ChatType(Enum):
 
 
 class Chat:
-    def __init__(self, _id: str, bot: TBot):
+    def __init__(self, _id: str|int, bot: TBot):
         self.logger = create_logger("chat_{}".format(_id))
         self.logger.debug("Create chat")
         self.pinned_message_id: Optional[int] = None
