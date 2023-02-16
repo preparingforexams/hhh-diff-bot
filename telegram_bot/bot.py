@@ -518,7 +518,7 @@ class Bot:
     @Command()
     async def chat_created(self, update: Update, context: CallbackContext):
         try:
-            return await self.update_hhh_message(context.chat_data["chat"], "")
+            await self.update_hhh_message(context.chat_data["chat"], "")
         except BadRequest:
             self.logger.exception("Failed to update message", exc_info=True)
 
