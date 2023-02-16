@@ -450,7 +450,7 @@ class Bot:
         if username == "@all":
             for user in chat.users:
                 try:
-                    return await self.unmute_user(chat.id, user)
+                    await self.unmute_user(chat.id, user)
                 except BadRequest:
                     self.logger.error(f"Failed to unmute user ({user})")
 
