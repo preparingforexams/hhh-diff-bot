@@ -536,7 +536,7 @@ class Bot:
             chat.invite_link = invite_link
 
             if await update.effective_message.reply_text("Added (new) invite link"):
-                return await self.update_hhh_message(context.chat_data["chat"], "", retry=True)
+                await self.update_hhh_message(context.chat_data["chat"], "", retry=True)
 
             if chat.created_message_id:
                 text = f"Created {chat.to_message_entry()}"
