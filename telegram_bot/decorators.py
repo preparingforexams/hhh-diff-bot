@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime
+import functools
 import inspect
+from datetime import datetime
 from datetime import timedelta
 
 import requests.exceptions
@@ -27,7 +28,7 @@ class Command:
         new_chat = clazz.chats.get(update.effective_chat.id)
         if new_chat is None:
             log.debug("Creating new chat")
-            new_chat = chat.Chat(update.effective_chat.id, clazz.updater.bot)
+            new_chat = chat.Chat(update.effective_chat.id, clazz.application.bot)
             new_chat.title = update.effective_chat.title
             clazz.chats[new_chat.id] = new_chat
 
@@ -43,7 +44,8 @@ class Command:
         return user.User.from_tuser(update.effective_user)
 
     def __call__(self, func):
-        def wrapped_f(*args, **kwargs):
+        @functools.wraps(func)
+        async def wrapped_f(*args, **kwargs):
             exception = None
             log = logger.create_logger(f"command_{func.__name__}")
             log.debug("Start")
@@ -62,7 +64,7 @@ class Command:
                 log.debug("Execute function due to coming directly from the bot.")
 
                 log.debug(execution_message)
-                result = func(*args, **kwargs)
+                result = await func(*args, **kwargs)
                 log.debug(finished_execution_message)
 
                 return result
@@ -79,17 +81,19 @@ class Command:
             is_group_chat = current_chat.is_group()
             log.debug(f"Checking for group chat: {is_group_chat}")
             if is_group_chat:
-                chat_admins = [admin.user.id for admin in current_chat.bot.get_chat_administrators(chat_id=current_chat.id)]
-                bot_id = clazz.me().id
+                chat_admins = [admin.user.id for admin in
+                               await current_chat.bot.get_chat_administrators(chat_id=current_chat.id)]
+                bot_id = (await clazz.me()).id
                 bot_is_admin = bot_id in chat_admins
                 log.debug(f"bot id: {bot_id} | admin ids: {chat_admins}")
                 create_invite_link = not current_chat.invite_link and bot_is_admin
-                log.debug(f"invite link create decision: not {current_chat.invite_link} and {bot_is_admin} -> {create_invite_link}")
+                log.debug(
+                    f"invite link create decision: not {current_chat.invite_link} and {bot_is_admin} -> {create_invite_link}")
                 if create_invite_link:
                     log.info(f"creating invite link for {current_chat.title}")
                     try:
-                        current_chat.invite_link = update.effective_chat.create_invite_link().invite_link
-                        clazz.update_hhh_message(current_chat, retry=False)
+                        current_chat.invite_link = (await update.effective_chat.create_invite_link()).invite_link
+                        await clazz.update_hhh_message(current_chat, retry=False)
                     except BadRequest:
                         log.exception("failed creating invite link or updating message: ", exc_info=True)
                         pass
@@ -115,8 +119,8 @@ class Command:
                 else:
                     message = f"Chat {chat} is not allowed to perform this action."
                     log.warning(message)
-                    clazz.mute_user(chat_id=current_chat.id, user=current_user, until_date=timedelta(minutes=15),
-                                    reason=message)
+                    await clazz.mute_user(chat_id=current_chat.id, user=current_user, until_date=timedelta(minutes=15),
+                                          reason=message)
                     exception = PermissionError()
 
             if self.chat_admin:
@@ -136,9 +140,9 @@ class Command:
                     exception = PermissionError()
 
             # photo is only returned in getChat (see https://core.telegram.org/bots/api#chat photo attribute)
-            if clazz.updater.bot.get_chat(current_chat.id).photo is None:
+            if (await clazz.application.bot.get_chat(current_chat.id)).photo is None:
                 try:
-                    clazz.set_chat_photo(current_chat)
+                    await clazz.set_chat_photo(current_chat)
                 except (requests.exceptions.HTTPError, BadRequest):
                     log.error("failed to set chat photo", exc_info=True)
 
@@ -153,10 +157,10 @@ class Command:
 
                 result = func(*args, **kwargs)
                 log.debug(finished_execution_message)
-                return result
+                return await result
             except PermissionError:
                 if update.effective_message:
-                    update.effective_message.reply_text(
+                    await update.effective_message.reply_text(
                         f"You ({current_user.name}) are not allowed to perform this action.")
             except Exception as e:
                 # Log for debugging purposes
