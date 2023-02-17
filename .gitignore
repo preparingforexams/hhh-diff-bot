@@ -4,6 +4,7 @@
 
 secrets.json
 venv
+.venv/
 users.json
 credentials.json
 state.json

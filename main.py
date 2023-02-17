@@ -109,7 +109,7 @@ def start(bot_token: str, state_file: str):
                 application.is_idle = False
 
             timer = threading.Timer(5, _exit)
-            timer.setDaemon(True)
+            timer.daemon = True
             timer.start()
     except IndexError:
         pass
