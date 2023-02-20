@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: sed -i -e "s#__TAG__#${GITHUB_SHA}#g" values.yaml
-      - uses: WyriHaximus/github-action-helm3@v2
+      - uses: WyriHaximus/github-action-helm3@v3
         with:
           exec: helm lint
-      - uses: WyriHaximus/github-action-helm3@v2
+      - uses: WyriHaximus/github-action-helm3@v3
         with:
           exec: helm lint --strict
 
