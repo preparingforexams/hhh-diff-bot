@@ -27,6 +27,8 @@ secret:
   password: __TELEGRAM_TOKEN__
   bing:
     key: __BING_IMAGE_API_SEARCH_KEY__
+  openai:
+    key: __OPENAI_API_KEY__
 
 configmap:
   name: hhh-diff-bot
