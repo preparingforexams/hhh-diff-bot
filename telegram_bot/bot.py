@@ -14,10 +14,10 @@ from telegram.error import BadRequest, TelegramError
 from telegram.ext import CallbackContext
 from telegram.ext._application import Application
 
-from .bing_images import search_bing_image
 from .chat import Chat, User
 from .decorators import Command
 from .logger import create_logger
+from .openai import generate_thumbnail
 
 
 def grouper(iterable, n, fillvalue=None) -> Iterable[Tuple[Any, Any]]:
@@ -603,20 +603,11 @@ class Bot:
         pass
 
     async def set_chat_photo(self, chat: Chat) -> bool:
-        thumbnail_url = search_bing_image(chat.title)
-        if not thumbnail_url:
+        thumbnail = generate_thumbnail(chat.title)
+        if not thumbnail:
             return False
 
-        response = requests.get(thumbnail_url)
-        if not response.ok:
-            self.logger.error(response.status_code, response.content)
-            return False
-
-        photo = response.content
-        if not photo:
-            return False
-
-        return await self.application.bot.set_chat_photo(chat.id, photo)
+        return await self.application.bot.set_chat_photo(chat.id, thumbnail)
 
 
 def _split_messages(lines):
