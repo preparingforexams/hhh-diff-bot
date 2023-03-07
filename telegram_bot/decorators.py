@@ -6,7 +6,7 @@ from datetime import datetime
 from datetime import timedelta
 
 import requests.exceptions
-from telegram import Update
+from telegram import Update, ChatAdministratorRights
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
@@ -139,8 +139,10 @@ class Command:
                         f"User ({current_user.name}) isn't a chat_admin and is not allowed to perform this action.")
                     exception = PermissionError()
 
+            telegram_chat = await clazz.application.bot.get_chat(current_chat.id)
+            default_admin_permissions: ChatAdministratorRights = await clazz.application.bot.get_my_default_administrator_rights(current_chat.id)
             # photo is only returned in getChat (see https://core.telegram.org/bots/api#chat photo attribute)
-            if (await clazz.application.bot.get_chat(current_chat.id)).photo is None:
+            if telegram_chat.photo is None and default_admin_permissions.can_change_info:
                 try:
                     await clazz.set_chat_photo(current_chat)
                 except (requests.exceptions.HTTPError, BadRequest):
