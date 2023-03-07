@@ -6,7 +6,7 @@ from datetime import datetime
 from datetime import timedelta
 
 import requests.exceptions
-from telegram import Update, ChatAdministratorRights
+from telegram import Update
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
