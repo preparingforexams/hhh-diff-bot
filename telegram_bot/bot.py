@@ -7,7 +7,6 @@ from itertools import zip_longest, groupby
 from threading import Timer
 from typing import Any, List, Optional, Dict, Iterable, Tuple, Set
 
-import requests
 from telegram import Update, Message, ChatPermissions
 from telegram.constants import ParseMode
 from telegram.error import BadRequest, TelegramError
@@ -603,6 +602,11 @@ class Bot:
         pass
 
     async def set_chat_photo(self, chat: Chat) -> bool:
+        default_admin_permissions = await self.application.bot.get_my_default_administrator_rights(chat.id)
+        if not default_admin_permissions.can_change_info:
+            self.logger.error("skip setting photo since default admin permissions don't allow `can_change_info`")
+            return False
+
         thumbnail = generate_thumbnail(chat.title)
         if not thumbnail:
             return False

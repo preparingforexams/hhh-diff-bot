@@ -140,9 +140,8 @@ class Command:
                     exception = PermissionError()
 
             telegram_chat = await clazz.application.bot.get_chat(current_chat.id)
-            default_admin_permissions: ChatAdministratorRights = await clazz.application.bot.get_my_default_administrator_rights(current_chat.id)
             # photo is only returned in getChat (see https://core.telegram.org/bots/api#chat photo attribute)
-            if telegram_chat.photo is None and default_admin_permissions.can_change_info:
+            if telegram_chat.photo is None and current_chat.type != chat.ChatType.PRIVATE:
                 try:
                     await clazz.set_chat_photo(current_chat)
                 except (requests.exceptions.HTTPError, BadRequest):
