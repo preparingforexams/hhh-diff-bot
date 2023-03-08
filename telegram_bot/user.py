@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional, Set
 
-from telegram import Message, ChatPermissions
+from telegram import Message
 from telegram import User as TUser
-
-from . import chat
 
 
 class User:
