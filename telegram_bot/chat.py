@@ -4,10 +4,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Set, List, Dict, Any
 
-from telegram import Bot as TBot, Update
+from telegram import Bot as TBot, Update, ChatPermissions
 from telegram import Chat as TChat
-from telegram.error import TelegramError
 from telegram._message import Message
+from telegram.error import TelegramError
 
 from .decorators import group
 from .logger import create_logger
@@ -41,7 +41,7 @@ class ChatType(Enum):
 
 
 class Chat:
-    def __init__(self, _id: str|int, bot: TBot):
+    def __init__(self, _id: str | int, bot: TBot):
         self.logger = create_logger("chat_{}".format(_id))
         self.logger.debug("Create chat")
         self.pinned_message_id: Optional[int] = None
@@ -143,7 +143,7 @@ class Chat:
 
         return successful_unpin
 
-    def _send_message(self, **kwargs) -> Message:
+    async def _send_message(self, **kwargs) -> Message:
         """
         Alias for `self.bot.send_message(chat_id=self.id, [...])`
         :param kwargs: Dict[str, Any] Passed to bot.send_message
@@ -153,13 +153,13 @@ class Chat:
         message = " | ".join(["{}: {}".format(key, val) for key, val in kwargs.items()])
         self.logger.info(f"Send message with: {message}")
 
-        result = self.bot.send_message(chat_id=self.id, **kwargs)
+        result = await self.bot.send_message(chat_id=self.id, **kwargs)
 
         self.logger.info("Result of sending message: {}".format(result))
         return result
 
     @group
-    def administrators(self) -> Set[User]:
+    async def administrators(self) -> Set[User]:
         """
         Lists all administrators in this chat.
         Skips administrators who are not in `self.users`.
@@ -170,7 +170,7 @@ class Chat:
         administrators: Set[User] = set()
 
         try:
-            chat_administrators = self.bot.get_chat_administrators(chat_id=self.id)
+            chat_administrators = await self.bot.get_chat_administrators(chat_id=self.id)
         except TelegramError:
             return administrators
 
@@ -211,3 +211,7 @@ class Chat:
                 return f"{self.title}"
         except AttributeError:
             return f"{self.title}"
+
+    async def permissions(self) -> ChatPermissions:
+        chat = await self.bot.get_chat(self.id)
+        return chat.permissions

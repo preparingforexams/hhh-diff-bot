@@ -5,7 +5,6 @@ import inspect
 from datetime import datetime
 from datetime import timedelta
 
-import requests.exceptions
 from telegram import Update
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
@@ -138,13 +137,6 @@ class Command:
                     log.error(
                         f"User ({current_user.name}) isn't a chat_admin and is not allowed to perform this action.")
                     exception = PermissionError()
-
-            # photo is only returned in getChat (see https://core.telegram.org/bots/api#chat photo attribute)
-            if (await clazz.application.bot.get_chat(current_chat.id)).photo is None:
-                try:
-                    await clazz.set_chat_photo(current_chat)
-                except (requests.exceptions.HTTPError, BadRequest):
-                    log.error("failed to set chat photo", exc_info=True)
 
             if update.effective_message:
                 log.debug(f"Message: {update.effective_message.text}")

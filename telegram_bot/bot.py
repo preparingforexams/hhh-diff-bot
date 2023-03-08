@@ -7,17 +7,16 @@ from itertools import zip_longest, groupby
 from threading import Timer
 from typing import Any, List, Optional, Dict, Iterable, Tuple, Set
 
-import requests
 from telegram import Update, Message, ChatPermissions
 from telegram.constants import ParseMode
 from telegram.error import BadRequest, TelegramError
 from telegram.ext import CallbackContext
 from telegram.ext._application import Application
 
-from .bing_images import search_bing_image
 from .chat import Chat, User
 from .decorators import Command
 from .logger import create_logger
+from .openai import generate_thumbnail
 
 
 def grouper(iterable, n, fillvalue=None) -> Iterable[Tuple[Any, Any]]:
@@ -511,7 +510,7 @@ class Bot:
     @Command()
     async def new_chat_title(self, update: Update, context: CallbackContext):
         chat: Chat = context.chat_data["chat"]
-        new_title = await update.effective_message.new_chat_title
+        new_title = update.effective_message.new_chat_title
 
         return await self.update_hhh_message(chat, new_title)
 
@@ -602,21 +601,23 @@ class Bot:
         self.logger.debug(update)
         pass
 
-    async def set_chat_photo(self, chat: Chat) -> bool:
-        thumbnail_url = search_bing_image(chat.title)
-        if not thumbnail_url:
-            return False
+    @Command()
+    async def set_chat_photo(self, update: Update, context: CallbackContext):
+        chat = context.chat_data["chat"]
 
-        response = requests.get(thumbnail_url)
-        if not response.ok:
-            self.logger.error(response.status_code, response.content)
-            return False
+        overwrite = "overwrite" in context.args
+        if not overwrite:
+            if (await self.application.bot.get_chat(chat.id)).photo:
+                msg = "will not update photo since there already is one present, use `set_photo overwrite` instead"
+                return await self.send_message(chat_id=chat.id, text=msg)
 
-        photo = response.content
-        if not photo:
-            return False
-
-        return await self.application.bot.set_chat_photo(chat.id, photo)
+        thumbnail = generate_thumbnail(chat.title)
+        if not thumbnail:
+            return await self.send_message(chat_id=chat.id, text="failed to generate photo")
+        try:
+            return await self.application.bot.set_chat_photo(chat.id, thumbnail)
+        except BadRequest as e:
+            return await self.send_message(chat_id=chat.id, text=f"failed to update photo: {e}")
 
 
 def _split_messages(lines):
