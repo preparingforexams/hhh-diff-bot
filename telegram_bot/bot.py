@@ -16,6 +16,7 @@ from telegram.ext._application import Application
 from .chat import Chat, User
 from .decorators import Command
 from .logger import create_logger
+from .openai import generate_thumbnail
 
 
 def grouper(iterable, n, fillvalue=None) -> Iterable[Tuple[Any, Any]]:
@@ -600,8 +601,23 @@ class Bot:
         self.logger.debug(update)
         pass
 
-    async def set_chat_photo(self, chat: Chat, thumbnail: bytes) -> bool:
-        return await self.application.bot.set_chat_photo(chat.id, thumbnail)
+    @Command()
+    async def set_chat_photo(self, update: Update, context: CallbackContext):
+        chat = context.chat_data["chat"]
+
+        overwrite = "overwrite" in context.args
+        if not overwrite:
+            if (await self.application.bot.get_chat(chat.id)).photo:
+                msg = "will not update photo since there already is one present, use `set_photo overwrite` instead"
+                return await self.send_message(chat_id=chat.id, text=msg)
+
+        thumbnail = generate_thumbnail(chat.title)
+        if not thumbnail:
+            return await self.send_message(chat_id=chat.id, text="failed to generate photo")
+        try:
+            return await self.application.bot.set_chat_photo(chat.id, thumbnail)
+        except BadRequest as e:
+            return await self.send_message(chat_id=chat.id, text=f"failed to update photo: {e}")
 
 
 def _split_messages(lines):
