@@ -16,7 +16,6 @@ from telegram.ext._application import Application
 from .chat import Chat, User
 from .decorators import Command
 from .logger import create_logger
-from .openai import generate_thumbnail
 
 
 def grouper(iterable, n, fillvalue=None) -> Iterable[Tuple[Any, Any]]:
@@ -510,7 +509,7 @@ class Bot:
     @Command()
     async def new_chat_title(self, update: Update, context: CallbackContext):
         chat: Chat = context.chat_data["chat"]
-        new_title = await update.effective_message.new_chat_title
+        new_title = update.effective_message.new_chat_title
 
         return await self.update_hhh_message(chat, new_title)
 
@@ -601,16 +600,7 @@ class Bot:
         self.logger.debug(update)
         pass
 
-    async def set_chat_photo(self, chat: Chat) -> bool:
-        default_admin_permissions = await self.application.bot.get_my_default_administrator_rights(chat.id)
-        if not default_admin_permissions.can_change_info:
-            self.logger.error("skip setting photo since default admin permissions don't allow `can_change_info`")
-            return False
-
-        thumbnail = generate_thumbnail(chat.title)
-        if not thumbnail:
-            return False
-
+    async def set_chat_photo(self, chat: Chat, thumbnail: bytes) -> bool:
         return await self.application.bot.set_chat_photo(chat.id, thumbnail)
 
 

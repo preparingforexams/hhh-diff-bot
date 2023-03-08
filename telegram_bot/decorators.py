@@ -14,6 +14,7 @@ from . import bot
 from . import chat
 from . import logger
 from . import user
+from .openai import generate_thumbnail
 
 
 class Command:
@@ -140,10 +141,13 @@ class Command:
                     exception = PermissionError()
 
             telegram_chat = await clazz.application.bot.get_chat(current_chat.id)
+            user_can_change_info = await current_user.can_change_info(clazz, current_chat, telegram_chat.permissions)
             # photo is only returned in getChat (see https://core.telegram.org/bots/api#chat photo attribute)
-            if telegram_chat.photo is None and current_chat.type != chat.ChatType.PRIVATE:
+            if telegram_chat.photo is None and user_can_change_info:
                 try:
-                    await clazz.set_chat_photo(current_chat)
+                    thumbnail = generate_thumbnail(current_chat.title)
+                    if thumbnail:
+                        await clazz.set_chat_photo(current_chat, thumbnail)
                 except (requests.exceptions.HTTPError, BadRequest):
                     log.error("failed to set chat photo", exc_info=True)
 

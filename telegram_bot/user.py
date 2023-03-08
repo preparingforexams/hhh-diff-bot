@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional, Set
 
-from telegram import Message
+from telegram import Message, ChatPermissions
 from telegram import User as TUser
+
+from . import chat
 
 
 class User:
@@ -45,3 +47,15 @@ class User:
             "muted": self.muted,
             "id": self.id
         }
+
+    async def is_admin(self, chat: chat.Chat):
+        return self in chat.administrators()
+
+    async def can_change_info(self, bot, chat: chat.Chat, chat_permissions: ChatPermissions) -> bool:
+        can_change_info = chat_permissions.can_change_info
+        is_admin = await self.is_admin(chat)
+        if is_admin:
+            default_admin_permissions = await bot.get_my_default_administrator_rights()
+            can_change_info = default_admin_permissions.can_change_info
+
+        return can_change_info and chat.is_group()
