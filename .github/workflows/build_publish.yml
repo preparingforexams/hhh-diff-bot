@@ -11,12 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: sed -i -e "s#__TAG__#${GITHUB_SHA}#g" values.yaml
-      - uses: WyriHaximus/github-action-helm3@v3
+      - uses: OpenAlcoholics/github-action-helm@v0.1.5
         with:
-          exec: helm lint
-      - uses: WyriHaximus/github-action-helm3@v3
+          raw_command: lint
+      - uses: OpenAlcoholics/github-action-helm@v0.1.5
         with:
-          exec: helm lint --strict
+          raw_command: lint --strict
 
   build_push_docker:
     runs-on: ubuntu-latest
@@ -45,7 +45,12 @@ jobs:
       - run: sed -i -e "s/__OPENAI_API_KEY__/${{ secrets.OPENAI_API_KEY }}/g" values.yaml
       - run: sed -i -e "s/__TAG__/${GITHUB_SHA}/g" values.yaml
       - name: install helm chart
-        uses: WyriHaximus/github-action-helm3@v3
+        uses: OpenAlcoholics/github-action-helm@v0.1.5
         with:
-          exec: helm upgrade hhhdiffbot . --install --namespace=telegram-bots --atomic
+          subcommand: upgrade
+          ref: .
+          release_name: hhhdiffbot
+          namespace: telegram-bots
+          atomic: true
+          install: true
           kubeconfig: ${{ secrets.KUBECONFIG_RAW }}
