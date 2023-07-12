@@ -234,8 +234,9 @@ class Bot:
     async def delete_message(self, chat_id: str, message_id: str, *args, **kwargs):
         return await self.application.bot.delete_message(chat_id=chat_id, message_id=message_id, *args, **kwargs)
 
-    async def update_hhh_message(self, chat: Chat, new_title: str = "", delete: bool = False, retry: bool = False):
-        if not retry:
+    async def update_hhh_message(self, chat: Chat, new_title: str = "", delete: bool = False,
+                                 create_changelog: bool = False):
+        if create_changelog:
             latest_change = self.create_latest_change_text(chat, new_title, delete)
             self.logger.debug(f"Add latest change {latest_change} to recent_changes")
             self.update_recent_changes(latest_change)
@@ -305,7 +306,8 @@ class Bot:
                     if e.message == "Message to edit not found":
                         self.logger.debug("Try sending a new message")
                         self.group_message_ids = []
-                        return await self.update_hhh_message(chat, new_title, delete, retry=True)
+                        return await self.update_hhh_message(chat, new_title=new_title, delete=delete,
+                                                             create_changelog=False)
 
     @Command()
     async def handle_left_chat_member(self, update: Update, context: CallbackContext) -> None:
@@ -319,7 +321,7 @@ class Bot:
             else:
                 chat.users.remove(user)
         else:
-            await self.update_hhh_message(chat, "", delete=True)
+            await self.update_hhh_message(chat, delete=True, create_changelog=True)
             context.chat_data.clear()
 
     def set_state(self, state: Dict[str, Any]) -> None:
@@ -375,7 +377,7 @@ class Bot:
                 chat.users.add(User.from_tuser(member))
             else:
                 try:
-                    await self.update_hhh_message(context.chat_data["chat"], "")
+                    await self.update_hhh_message(context.chat_data["chat"], create_changelog=True)
                 except BadRequest:
                     self.logger.exception("Failed to update message", exc_info=True)
 
@@ -511,13 +513,15 @@ class Bot:
     async def new_chat_title(self, update: Update, context: CallbackContext):
         chat: Chat = context.chat_data["chat"]
         new_title = update.effective_message.new_chat_title
+        if not new_title:
+            self.logger.error("")
 
-        return await self.update_hhh_message(chat, new_title)
+        return await self.update_hhh_message(chat, new_title=new_title, create_changelog=True)
 
     @Command()
     async def chat_created(self, update: Update, context: CallbackContext):
         try:
-            await self.update_hhh_message(context.chat_data["chat"], "")
+            await self.update_hhh_message(context.chat_data["chat"], create_changelog=True)
         except BadRequest:
             self.logger.exception("Failed to update message", exc_info=True)
 
@@ -535,7 +539,7 @@ class Bot:
             chat.invite_link = invite_link
 
             if await update.effective_message.reply_text("Added (new) invite link"):
-                await self.update_hhh_message(context.chat_data["chat"], "", retry=True)
+                await self.update_hhh_message(context.chat_data["chat"])
 
             if chat.created_message_id:
                 text = f"Created {chat.to_message_entry()}"
@@ -567,7 +571,7 @@ class Bot:
     async def remove_invite_link(self, update: Update, context: CallbackContext):
         chat: Chat = context.chat_data["chat"]
         chat.invite_link = None
-        return await self.update_hhh_message(context.chat_data["chat"], "", retry=True)
+        return await self.update_hhh_message(context.chat_data["chat"])
 
     @Command()
     async def migrate_chat_id(self, update: Update, context: CallbackContext):
@@ -591,7 +595,7 @@ class Bot:
     async def renew_diff_message(self, update: Update, context: CallbackContext):
         self.group_message_ids = []
         # retry doesn't update the recent changes
-        return await self.update_hhh_message(context.chat_data["chat"], "", retry=True)
+        return await self.update_hhh_message(context.chat_data["chat"])
 
     async def me(self):
         return await self.application.bot.get_me()
