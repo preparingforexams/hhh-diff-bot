@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: sed -i -e "s#__TAG__#${GITHUB_SHA}#g" values.yaml
-      - uses: OpenAlcoholics/github-action-helm@v0.1.5
+      - uses: OpenAlcoholics/github-action-helm@v0.2.0
         with:
           raw_command: lint
-      - uses: OpenAlcoholics/github-action-helm@v0.1.5
+      - uses: OpenAlcoholics/github-action-helm@v0.2.0
         with:
           raw_command: lint --strict
 
