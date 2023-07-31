@@ -513,8 +513,6 @@ class Bot:
     async def new_chat_title(self, update: Update, context: CallbackContext):
         chat: Chat = context.chat_data["chat"]
         new_title = update.effective_message.new_chat_title
-        if not new_title:
-            self.logger.error("")
 
         return await self.update_hhh_message(chat, new_title=new_title, create_changelog=True)
 
