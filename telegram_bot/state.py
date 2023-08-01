@@ -105,8 +105,9 @@ class FileState(State):
     def read(self) -> dict[str, Any]:
         with open(self.filepath) as f:
             self.state = json.load(f)
-            self.state["chats"] = {schat["id"]: Chat.deserialize(schat, self.bot) for schat in self.state.get("chats", [])}
-            return self.state
+
+        self.state["chats"] = {schat["id"]: Chat.deserialize(schat, self.bot) for schat in self.state.get("chats", [])}
+        return self.state
 
     def write(self):
         if not self.changed:
