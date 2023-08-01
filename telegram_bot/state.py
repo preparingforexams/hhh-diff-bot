@@ -14,6 +14,7 @@ class State:
     def __init__(self, initial_state: dict[str, Any]):
         self.state = initial_state
         self.bot = None
+        self.changed = False
 
     def initialize(self, bot):
         self.state.update(self.read())
@@ -25,6 +26,7 @@ class State:
         raise NotImplemented
 
     def set(self, key: str, value: Any):
+        self.changed = True
         self.state[key] = value
 
     def get(self, item: str, default=None):
@@ -79,6 +81,9 @@ class ConfigmapState(State):
         return self.state
 
     def write(self):
+        if not self.changed:
+            return
+
         state = self.state.copy()
         # noinspection PyTypeChecker
         state["chats"] = [chat.serialize() for chat in state["chats"].values()]
@@ -89,6 +94,7 @@ class ConfigmapState(State):
         self.api.patch_namespaced_config_map(self.name, self.namespace, self.configmap)
         # otherwise we're getting a 409 from the k8s api due to the version difference
         self.read()
+        self.changed = False
 
 
 class FileState(State):
@@ -103,5 +109,9 @@ class FileState(State):
             return self.state
 
     def write(self):
+        if not self.changed:
+            return
+
         with open(self.filepath, "w+") as f:
             json.dump(self.state, f)
+        self.changed = False
