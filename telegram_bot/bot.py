@@ -10,8 +10,8 @@ from typing import Any, List, Optional, Dict, Iterable, Tuple, Set
 from telegram import Update, Message, ChatPermissions
 from telegram.constants import ParseMode
 from telegram.error import BadRequest, TelegramError
+from telegram.ext import Application
 from telegram.ext import CallbackContext
-from telegram.ext._application import Application
 
 from .chat import Chat, User
 from .decorators import Command

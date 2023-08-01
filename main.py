@@ -4,7 +4,7 @@ import threading
 from typing import Callable, Dict
 
 from telegram.ext import CommandHandler, MessageHandler, filters
-from telegram.ext._applicationbuilder import ApplicationBuilder
+from telegram.ext import ApplicationBuilder
 
 from telegram_bot import Bot, create_logger
 
