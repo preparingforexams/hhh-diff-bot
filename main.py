@@ -1,12 +1,16 @@
+from __future__ import annotations
+
+import json
 import os
 import sys
-import threading
 from typing import Callable, Dict
 
+from kubernetes import config, client
 from telegram.ext import CommandHandler, MessageHandler, filters
 from telegram.ext._applicationbuilder import ApplicationBuilder
 
 from telegram_bot import Bot, create_logger
+from telegram_bot.state import State, FileState, ConfigmapState
 
 
 def update_state(state_filepath: str, *, state_mutation_function: Callable[[Dict], Dict] | None = None,
@@ -52,12 +56,26 @@ def cleanup_state(content: Dict, **kwargs) -> Dict:
     return dedup
 
 
-def start(bot_token: str, state_file: str):
+def get_state(state_filepath: str, initial_state: dict) -> State:
+    if os.path.exists(state_filepath):
+        return FileState(state_filepath, initial_state)
+    else:
+
+        try:
+            config.load_incluster_config()
+        except config.config_exception.ConfigException:
+            config.load_kube_config()
+
+        kubernetes_api_client = client.CoreV1Api()
+        return ConfigmapState(kubernetes_api_client, initial_state)
+
+
+def start(bot_token: str, state: State):
     logger = create_logger("start")
     logger.debug("Start bot")
 
     application = ApplicationBuilder().token(bot_token).build()
-    bot = Bot(application, state_file)
+    bot = Bot(application, state)
 
     logger.debug("Register command handlers")
     # CommandHandler
@@ -91,15 +109,6 @@ def start(bot_token: str, state_file: str):
     application.add_handler(MessageHandler(filters.StatusUpdate.MIGRATE, bot.migrate_chat_id))
     application.add_handler(MessageHandler(filters.ALL, bot.noop))
 
-    logger.debug(f"Read state from {state_file}")
-    if os.path.exists(state_file):
-        with open(state_file) as file:
-            try:
-                state = json.load(file)
-                bot.set_state(state)
-            except json.decoder.JSONDecodeError as e:
-                logger.warning(f"Unable to load previous state: {e}")
-
     logger.info("Running")
     application.run_polling()
 
@@ -120,15 +129,24 @@ def get_token() -> str:
 
 
 if __name__ == "__main__":
-    state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
-    update_state(state_filepath, state_mutation_function=cleanup_state)
-    import json
-
     token = get_token()
+
+    state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
+    if len(os.getenv("FORCE_CONFIGMAP_STATE")) > 0:
+        state_filepath = ""
+
+    state = get_state(state_filepath, {
+        "group_message_id": [],
+        "recent_changes": [],
+        "hhh_id": -1001473841450,
+        "pinned_message_id": None
+    })
+    if type(state) == FileState:
+        update_state(state_filepath, state_mutation_function=cleanup_state)
 
     # noinspection PyBroadException
     try:
-        start(token, state_filepath)
+        start(token, state)
     except Exception as e:
         create_logger("__main__").error(e, exc_info=True)
         sys.exit(1)
