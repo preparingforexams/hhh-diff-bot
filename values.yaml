@@ -16,6 +16,7 @@ deployment:
 volume:
   name: hhhdiffbot-state
   path: /data
+  enable: false
 
 claim:
   name: hhhdiffbot-state

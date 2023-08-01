@@ -30,14 +30,18 @@ spec:
         envFrom:
           - secretRef:
               name: {{ .Values.secret.name }}
+        {{- if .Values.volume.enable }}
         volumeMounts:
           - mountPath: {{ .Values.volume.path }}
             name: {{ .Values.volume.name }}
+        {{- end }}
         resources:
           requests:
             cpu: {{ .Values.deployment.requests.cpu }}
             memory: {{ .Values.deployment.requests.memory }}
+      {{- if .Values.volume.enable }}
       volumes:
       - name: {{ .Values.volume.name }}
         persistentVolumeClaim:
           claimName: {{ .Values.claim.name }}
+      {{- end }}
