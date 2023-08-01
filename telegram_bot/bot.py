@@ -629,7 +629,12 @@ class Bot:
     @Command()
     async def set_premium_users_only(self, update: Update, context: CallbackContext):
         chat = context.chat_data["chat"]
-        chat.premium_users_only = True
+        state = True
+
+        if context.args:
+            state = context.args[0].lower() == "true"
+
+        chat.premium_users_only = state
 
         msg = "non premium-users will be kicked from this group when they interact with this chat again"
         return await self.send_message(chat_id=chat.id,
