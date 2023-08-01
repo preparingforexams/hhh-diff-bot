@@ -469,8 +469,13 @@ class Bot:
             else:
                 return await update.effective_message.reply_text(f"Failed to unmute {username}.")
 
-    async def kick_user(self, chat: Chat, user: User):
-        return await self.application.bot.kick_chat_member(chat_id=chat.id, user_id=user.id)
+    async def kick_user(self, chat: Chat, user_id: int):
+        # since we only want to kick the user we can unban them immediately after, since we don't want to ensure
+        # unbanning by calling `unban_chat_member` we simply provide a small ban time
+        # Note: "If user is banned for more than 366 days or less than 30 seconds
+        #        from the current time they are considered to be banned forever."
+        ban_until = datetime.now() + timedelta(minutes=1)
+        return await self.application.bot.ban_chat_member(chat_id=chat.id, user_id=user_id, until_date=ban_until)
 
     @Command(chat_admin=True)
     async def kick(self, update: Update, context: CallbackContext):
@@ -492,7 +497,7 @@ class Bot:
             return await update.effective_message.reply_text(f"Can't kick {username} (not found in current chat).")
         else:
             try:
-                result = await self.kick_user(chat, user)
+                result = await self.kick_user(chat, user.id)
             except TelegramError as e:
                 message = f"Couldn't remove {user.name} from chat due to error ({e})"
                 self.logger.error(message)
