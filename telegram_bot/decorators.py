@@ -144,11 +144,10 @@ class Command:
                 current_chat.add_message(update)  # Needs user in chat
 
             # gatekeeping
-            if current_chat.premium_users_only:
+            if current_chat.premium_users_only and update.effective_user:
+                users = [update.effective_user]
                 if update.effective_message and update.effective_message.new_chat_members:
-                    users = update.effective_message.new_chat_members
-                else:
-                    users = [update.effective_user]
+                    users.extend(update.effective_message.new_chat_members)
                 for _user in users:
                     # don't kick premium members/bots
                     if not (_user.is_premium or _user.is_bot):
