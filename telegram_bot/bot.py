@@ -621,6 +621,15 @@ class Bot:
         except BadRequest as e:
             return await self.send_message(chat_id=chat.id, text=f"failed to update photo: {e}")
 
+    @Command()
+    async def set_premium_users_only(self, update: Update, context: CallbackContext):
+        chat = context.chat_data["chat"]
+        chat.premium_users_only = True
+
+        msg = "non premium-users will be kicked from this group when they interact with this chat again"
+        return await self.send_message(chat_id=chat.id,
+                                       text=msg)
+
 
 def _split_messages(lines):
     message_length = 4096
