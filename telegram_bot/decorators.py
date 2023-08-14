@@ -6,7 +6,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from telegram import Update
-from telegram.error import BadRequest
+from telegram.error import BadRequest, TelegramError
 from telegram.ext import CallbackContext
 
 from . import bot
@@ -142,6 +142,21 @@ class Command:
             if update.effective_message:
                 log.debug(f"Message: {update.effective_message.text}")
                 current_chat.add_message(update)  # Needs user in chat
+
+            # gatekeeping
+            if current_chat.premium_users_only and update.effective_user:
+                users = [update.effective_user]
+                if update.effective_message and update.effective_message.new_chat_members:
+                    users.extend(update.effective_message.new_chat_members)
+                for _user in users:
+                    # don't kick premium members/bots
+                    if not (_user.is_premium or _user.is_bot):
+                        try:
+                            log.info(f"kick {_user} from {current_chat}")
+                            await clazz.kick_user(current_chat, _user.id)
+                        except TelegramError as e:
+                            message = f"Couldn't remove {_user} from chat due to error ({e})"
+                            log.error(message)
 
             log.debug(execution_message)
             try:

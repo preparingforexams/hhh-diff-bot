@@ -4,7 +4,7 @@ import threading
 from typing import Callable, Dict
 
 from telegram.ext import CommandHandler, MessageHandler, filters
-from telegram.ext._applicationbuilder import ApplicationBuilder
+from telegram.ext import ApplicationBuilder
 
 from telegram_bot import Bot, create_logger
 
@@ -77,6 +77,7 @@ def start(bot_token: str, state_file: str):
     application.add_handler(CommandHandler("add_invite_link", bot.add_invite_link))
     application.add_handler(CommandHandler("remove_invite_link", bot.remove_invite_link))
     application.add_handler(CommandHandler("renew_diff_message", bot.renew_diff_message))
+    application.add_handler(CommandHandler("set_premium_users_only", bot.set_premium_users_only))
 
     # Debugging
     application.add_handler(CommandHandler("status", bot.status))
