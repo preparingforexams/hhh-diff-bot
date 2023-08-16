@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import tempfile
@@ -7,6 +8,7 @@ from itertools import zip_longest, groupby
 from threading import Timer
 from typing import Any, List, Optional, Dict, Iterable, Tuple, Set
 
+from kubernetes import client, config
 from telegram import Update, Message, ChatPermissions
 from telegram.constants import ParseMode
 from telegram.error import BadRequest, TelegramError
@@ -17,6 +19,7 @@ from .chat import Chat, User
 from .decorators import Command
 from .logger import create_logger
 from .openai import generate_thumbnail
+from .state import State
 
 
 def grouper(iterable, n, fillvalue=None) -> Iterable[Tuple[Any, Any]]:
@@ -33,18 +36,12 @@ class SpamType(Enum):
 
 
 class Bot:
-    def __init__(self, application: Application, state_filepath: str):
+    def __init__(self, application: Application, state: State):
         self.logger = create_logger("hhh_diff_bot")
-        self.chats: Dict[int, Chat] = {}
         self.application = application
         self.main_admin_ids: Set[int] = self._load_main_admin_ids()
-        self.state: Dict[str, Any] = {
-            "group_message_id": [],
-            "recent_changes": [],
-            "hhh_id": -1001473841450,
-            "pinned_message_id": None
-        }
-        self.state_filepath = state_filepath
+        self.state = state
+        self.state.initialize(application.bot)
 
     def _load_main_admin_ids(self) -> Set[int]:
         raw_value = os.getenv("MAIN_ADMIN_IDS")
@@ -70,10 +67,12 @@ class Bot:
                 self.logger.error("Not a valid user ID: %s", main_admin_id)
         return result
 
-    def save_state(self) -> None:
-        self.state["chats"] = [chat.serialize() for chat in self.chats.values()]
-        with open(self.state_filepath, "w+") as f:
-            json.dump(self.state, f)
+    def __getattr__(self, item):
+        # backwards compatibility
+        if item == "chats":
+            return self.state["chats"]
+
+        raise AttributeError(f"'Bot' object has no attribute '{item}'")
 
     @Command(chat_admin=True)
     async def delete_chat(self, update: Update, context: CallbackContext) -> None:
@@ -323,10 +322,6 @@ class Bot:
         else:
             await self.update_hhh_message(chat, delete=True, create_changelog=True)
             context.chat_data.clear()
-
-    def set_state(self, state: Dict[str, Any]) -> None:
-        self.state = state
-        self.chats = {schat["id"]: Chat.deserialize(schat, self.application.bot) for schat in state.get("chats", [])}
 
     async def send_message(self, *, chat_id: int, text: str, **kwargs) -> Message:
         return await self.application.bot.send_message(chat_id=chat_id, text=text, disable_web_page_preview=True,

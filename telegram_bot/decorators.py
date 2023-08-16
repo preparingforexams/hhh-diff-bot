@@ -70,6 +70,7 @@ class Command:
 
             log.debug(f"message from user: {update.effective_user.first_name}")
             current_chat = context.chat_data.get("chat")
+            state = clazz.state
             if not current_chat:
                 current_chat = self._add_chat(clazz, update, context)
             if not current_chat.title:
@@ -92,7 +93,7 @@ class Command:
                     log.info(f"creating invite link for {current_chat.title}")
                     try:
                         current_chat.invite_link = (await update.effective_chat.create_invite_link()).invite_link
-                        await clazz.update_hhh_message(current_chat, retry=False)
+                        await clazz.update_hhh_message(current_chat, create_changelog=True)
                     except BadRequest:
                         log.exception("failed creating invite link or updating message: ", exc_info=True)
                         pass
@@ -176,7 +177,7 @@ class Command:
 
                 raise e
             finally:
-                clazz.save_state()
+                clazz.state.write()
                 log.debug("End")
 
         return wrapped_f
