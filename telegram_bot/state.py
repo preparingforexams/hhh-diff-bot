@@ -6,6 +6,7 @@ from typing import Any, Optional
 import kubernetes.client
 from kubernetes import client
 from kubernetes.client import V1ConfigMap
+from kubernetes.dynamic import DynamicClient
 
 from .chat import Chat
 
@@ -94,6 +95,18 @@ class ConfigmapState(State):
     def changed(self, value):
         return self.last_value != value
 
+    @staticmethod
+    def dict_keys_to_camel(d: dict) -> dict:
+        data = {}
+        for k, v in d.items():
+            s = k.split("_")
+            key = s[0] + "".join([x.title() for x in s[1:]])
+            if isinstance(v, dict):
+                v = ConfigmapState.dict_keys_to_camel(v)
+            data[key] = v
+
+        return data
+
     def write(self):
         state = self.state.copy()
         state["chats"]: list[dict] = [schat.serialize() for schat in state["chats"].values()]
@@ -106,7 +119,15 @@ class ConfigmapState(State):
             self.configmap.data = {}
         self.configmap.data = {"state": value}
 
-        self.api.patch_namespaced_config_map(self.name, self.namespace, self.configmap)
+        dclient = DynamicClient(kubernetes.client.ApiClient())
+        resource = dclient.resources.get(api_version="v1", kind="ConfigMap")
+        cm = self.configmap.to_dict()
+        cm["metadata"]["creation_timestamp"] = cm["metadata"]["creation_timestamp"].isoformat()
+        data = self.dict_keys_to_camel(cm)
+
+        dclient.server_side_apply(body=data, resource=resource, name=self.name,
+                                  namespace=self.namespace, field_manager="kubectl")
+        # self.api.patch_namespaced_config_map(self.name, self.namespace, self.configmap)
         # otherwise we're getting a 409 from the k8s api due to the version difference
         self.read(False)
         self.last_value = value
