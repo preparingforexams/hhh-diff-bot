@@ -12,8 +12,8 @@ from kubernetes import client, config
 from telegram import Update, Message, ChatPermissions
 from telegram.constants import ParseMode
 from telegram.error import BadRequest, TelegramError
+from telegram.ext import Application
 from telegram.ext import CallbackContext
-from telegram.ext._application import Application
 
 from .chat import Chat, User
 from .decorators import Command
@@ -464,8 +464,13 @@ class Bot:
             else:
                 return await update.effective_message.reply_text(f"Failed to unmute {username}.")
 
-    async def kick_user(self, chat: Chat, user: User):
-        return await self.application.bot.kick_chat_member(chat_id=chat.id, user_id=user.id)
+    async def kick_user(self, chat: Chat, user_id: int):
+        # since we only want to kick the user we can unban them immediately after, since we don't want to ensure
+        # unbanning by calling `unban_chat_member` we simply provide a small ban time
+        # Note: "If user is banned for more than 366 days or less than 30 seconds
+        #        from the current time they are considered to be banned forever."
+        ban_until = datetime.now() + timedelta(minutes=1)
+        return await self.application.bot.ban_chat_member(chat_id=chat.id, user_id=user_id, until_date=ban_until)
 
     @Command(chat_admin=True)
     async def kick(self, update: Update, context: CallbackContext):
@@ -487,7 +492,7 @@ class Bot:
             return await update.effective_message.reply_text(f"Can't kick {username} (not found in current chat).")
         else:
             try:
-                result = await self.kick_user(chat, user)
+                result = await self.kick_user(chat, user.id)
             except TelegramError as e:
                 message = f"Couldn't remove {user.name} from chat due to error ({e})"
                 self.logger.error(message)
@@ -615,6 +620,20 @@ class Bot:
             return await self.application.bot.set_chat_photo(chat.id, thumbnail)
         except BadRequest as e:
             return await self.send_message(chat_id=chat.id, text=f"failed to update photo: {e}")
+
+    @Command()
+    async def set_premium_users_only(self, update: Update, context: CallbackContext):
+        chat = context.chat_data["chat"]
+        state = True
+
+        if context.args:
+            state = context.args[0].lower() == "true"
+
+        chat.premium_users_only = state
+
+        msg = "non premium-users will be kicked from this group when they interact with this chat again"
+        return await self.send_message(chat_id=chat.id,
+                                       text=msg)
 
 
 def _split_messages(lines):

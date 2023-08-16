@@ -54,6 +54,7 @@ class Chat:
         self.description: Optional[str] = None
         self.last_chat_event_time: Optional[datetime] = None
         self.created_message_id: Optional[int] = None
+        self.premium_users_only = False
 
     def get_user_by_id(self, _id: int) -> Optional[User]:
         result = next(filter(lambda user: user.id == _id, self.users), None)
@@ -74,6 +75,7 @@ class Chat:
             "type": chat_type.serialize(),
             "last_chat_event_isotime": last_chat_event_isotime,
             "created_message_id": self.created_message_id,
+            "premium_users_only": self.premium_users_only,
         }
 
         return serialized
@@ -101,6 +103,7 @@ class Chat:
         chat.created_message_id = json_object.get("created_message_id", None)
         if last_chat_event_time := json_object.get("last_chat_event_isotime"):
             chat.last_chat_event_time = datetime.fromisoformat(last_chat_event_time)
+        chat.premium_users_only = bool(json_object.get("premium_users_only", False))
 
         return chat
 
