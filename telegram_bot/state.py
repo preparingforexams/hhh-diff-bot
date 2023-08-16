@@ -14,19 +14,20 @@ class State:
     def __init__(self, initial_state: dict[str, Any]):
         self.state = initial_state
         self.bot = None
-        self.changed = False
+        self.last_value = None
 
     def initialize(self, bot):
-        self.state.update(self.read())
+        self.bot = bot
+        self.state.update(self.read(update_global_state=False))
+        self.write()
 
-    def read(self) -> dict[str, Any]:
+    def read(self, update_global_state: bool = True) -> dict[str, Any]:
         raise NotImplemented
 
     def write(self):
         raise NotImplemented
 
     def set(self, key: str, value: Any):
-        self.changed = True
         self.state[key] = value
 
     def get(self, item: str, default=None):
@@ -37,6 +38,9 @@ class State:
 
     def __setitem__(self, key: str, value: Any):
         self.set(key, value)
+
+    def items(self):
+        return self.state.items()
 
 
 class ConfigmapState(State):
@@ -52,8 +56,9 @@ class ConfigmapState(State):
 
     def initialize(self, bot):
         create = True
-        for configmap in self.api.list_namespaced_config_map(self.namespace):
-            if configmap.metadata.dictionary["name"] == self.name:
+
+        for configmap in self.api.list_namespaced_config_map(self.namespace).items:
+            if configmap.metadata.name == self.name:
                 create = False
                 break
 
@@ -65,54 +70,43 @@ class ConfigmapState(State):
                     name=self.name,
                     namespace=self.namespace,
                 ),
-                data=self.state
+                data={}
             )
-            self.api.create_namespaced_config_map(self.namespace, configmap)
+            self.configmap = self.api.create_namespaced_config_map(self.namespace, configmap)
+            self.configmap.data = self.state
+
         super().initialize(bot)
 
-    def read(self) -> dict[str, Any]:
+    def read(self, update_global_state: bool = True) -> dict[str, Any]:
         self.configmap = self.api.read_namespaced_config_map(self.name, self.namespace)
-        if self.configmap.data is None:
-            self.state = {}
-        else:
-            self.state = json.loads(base64.b64decode(self.configmap.data["state"]).decode("utf-8"))
 
-        self.state["chats"] = {schat["id"]: Chat.deserialize(schat, self.bot) for schat in self.state.get("chats", [])}
-        return self.state
+        if not self.configmap.data:
+            self.configmap.data = {"state": base64.b64encode('{"chats": []}'.encode('utf-8'))}
+
+        decoded_value = base64.b64decode(self.configmap.data["state"]).decode("utf-8")
+        state = json.loads(decoded_value)
+        state["chats"] = {schat["id"]: Chat.deserialize(schat, self.bot) for schat in state.get("chats", [])}
+
+        if update_global_state:
+            self.state = state
+        return state
+
+    def changed(self, value):
+        return self.last_value != value
 
     def write(self):
-        if not self.changed:
-            return
-
         state = self.state.copy()
-        # noinspection PyTypeChecker
-        state["chats"] = [chat.serialize() for chat in state["chats"].values()]
+        state["chats"]: list[dict] = [schat.serialize() for schat in state["chats"].values()]
         value = json.dumps(state).encode("utf-8")
         value = base64.b64encode(value).decode("utf-8")
-        self.configmap.data["state"] = value
+        if not self.changed(value):
+            return
+
+        if not self.configmap.data:
+            self.configmap.data = {}
+        self.configmap.data = {"state": value}
 
         self.api.patch_namespaced_config_map(self.name, self.namespace, self.configmap)
         # otherwise we're getting a 409 from the k8s api due to the version difference
-        self.read()
-        self.changed = False
-
-
-class FileState(State):
-    def __init__(self, filepath: str, state: dict[str, Any]):
-        super().__init__(state)
-        self.filepath = filepath
-
-    def read(self) -> dict[str, Any]:
-        with open(self.filepath) as f:
-            self.state = json.load(f)
-
-        self.state["chats"] = {schat["id"]: Chat.deserialize(schat, self.bot) for schat in self.state.get("chats", [])}
-        return self.state
-
-    def write(self):
-        if not self.changed:
-            return
-
-        with open(self.filepath, "w+") as f:
-            json.dump(self.state, f)
-        self.changed = False
+        self.read(False)
+        self.last_value = value

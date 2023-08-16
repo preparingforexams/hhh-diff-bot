@@ -6,11 +6,11 @@ import sys
 from typing import Callable, Dict
 
 from kubernetes import config, client
-from telegram.ext import CommandHandler, MessageHandler, filters
-from telegram.ext._applicationbuilder import ApplicationBuilder
+# noinspection PyPackageRequirements
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
 from telegram_bot import Bot, create_logger
-from telegram_bot.state import State, FileState, ConfigmapState
+from telegram_bot.state import State, ConfigmapState
 
 
 def update_state(state_filepath: str, *, state_mutation_function: Callable[[Dict], Dict] | None = None,
@@ -56,18 +56,14 @@ def cleanup_state(content: Dict, **kwargs) -> Dict:
     return dedup
 
 
-def get_state(state_filepath: str, initial_state: dict) -> State:
-    if os.path.exists(state_filepath):
-        return FileState(state_filepath, initial_state)
-    else:
+def get_state(initial_state: dict) -> State:
+    try:
+        config.load_incluster_config()
+    except config.config_exception.ConfigException:
+        config.load_kube_config("/home/torben/.kube/rke2-admin-config")
 
-        try:
-            config.load_incluster_config()
-        except config.config_exception.ConfigException:
-            config.load_kube_config()
-
-        kubernetes_api_client = client.CoreV1Api()
-        return ConfigmapState(kubernetes_api_client, initial_state)
+    kubernetes_api_client = client.CoreV1Api()
+    return ConfigmapState(kubernetes_api_client, initial_state)
 
 
 def start(bot_token: str, state: State):
@@ -131,18 +127,13 @@ def get_token() -> str:
 if __name__ == "__main__":
     token = get_token()
 
-    state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
-    if len(os.getenv("FORCE_CONFIGMAP_STATE")) > 0:
-        state_filepath = ""
 
-    state = get_state(state_filepath, {
+    state = get_state({
         "group_message_id": [],
         "recent_changes": [],
         "hhh_id": -1001473841450,
         "pinned_message_id": None
     })
-    if type(state) == FileState:
-        update_state(state_filepath, state_mutation_function=cleanup_state)
 
     # noinspection PyBroadException
     try:

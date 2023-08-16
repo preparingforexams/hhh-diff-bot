@@ -13,16 +13,6 @@ deployment:
     memory: 50Mi
   updateStrategy: Recreate
 
-volume:
-  name: hhhdiffbot-state
-  path: /data
-  enable: false
-
-claim:
-  name: hhhdiffbot-state
-  size: 1Gi
-  accessMode: ReadWriteOnce
-
 secret:
   name: hhhdiffbot-telegram-token
   password: __TELEGRAM_TOKEN__
@@ -37,29 +27,15 @@ configmap:
 
 state:
   name: hhhstate
-  forceConfigmap: "false"
 
 telegram:
   mainAdminIds:
     - 139656428
     - 133399998
 
-cronjob:
-  name: hhh-diff-bot-reminder
-  image: ghcr.io/preparingforexams/hhh-diff-bot:__TAG__
-  imagePullPolicy: Always
-  command: [ 'python3' ]
-  args: [ 'reminder.py' ]
-  schedule: "0 20 * * 0"
-  backoffLimit: 0
-  successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 1
-  restartPolicy: Never
-  labels:
-    app: hhh-diff-bot-reminder
-  requests:
-    cpu: 100m
-    memory: 100Mi
-  limit:
-    cpu: 300m
-    memory: 300Mi
+serviceaccount:
+  name: hhhdiffbot-state
+role:
+  name: hhhdiffbot-state
+rolebinding:
+  name: hhhdiffbot-state
