@@ -42,7 +42,6 @@ class Bot:
         self.main_admin_ids: Set[int] = self._load_main_admin_ids()
         self.state = state
         self.state.initialize(application.bot)
-        print(*self.state.items(), sep="\n")
 
     def _load_main_admin_ids(self) -> Set[int]:
         raw_value = os.getenv("MAIN_ADMIN_IDS")
