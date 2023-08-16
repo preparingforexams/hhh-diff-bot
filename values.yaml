@@ -23,7 +23,6 @@ secret:
 
 configmap:
   name: hhh-diff-bot
-  ageThresholdDays: 30
 
 state:
   name: hhhstate

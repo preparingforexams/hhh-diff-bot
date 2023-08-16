@@ -4,6 +4,5 @@ metadata:
   name: {{ .Values.configmap.name }}
   namespace: {{ .Values.namespace | default .Release.Namespace }}
 data:
-  AGE_THRESHOLD_DAYS: "{{ .Values.configmap.ageThresholdDays }}"
   CONFIGMAP_NAME: "{{ .Values.state.name }}"
   CONFIGMAP_NAMESPACE: "{{ .Values.namespace }}"
