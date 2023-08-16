@@ -20,7 +20,6 @@ spec:
         {{ $k }}: {{ $v }}
         {{- end }}
     spec:
-      serviceAccountName: {{ .Values.serviceaccount.name }}
       containers:
       - name: {{ .Values.deployment.name }}
         image: {{ .Values.deployment.image }}
@@ -31,9 +30,14 @@ spec:
         envFrom:
           - secretRef:
               name: {{ .Values.secret.name }}
-          - configMapRef:
-              name: {{ .Values.configmap.name }}
+        volumeMounts:
+          - mountPath: {{ .Values.volume.path }}
+            name: {{ .Values.volume.name }}
         resources:
           requests:
             cpu: {{ .Values.deployment.requests.cpu }}
             memory: {{ .Values.deployment.requests.memory }}
+      volumes:
+      - name: {{ .Values.volume.name }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.claim.name }}
