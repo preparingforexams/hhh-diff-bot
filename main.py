@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import os
 import sys
@@ -33,7 +31,7 @@ def update_state(state_filepath: str, *, state_mutation_function: Callable[[Dict
         json.dump(state, f)
 
 
-def cleanup_state(content: Dict, **kwargs) -> Dict:
+def cleanup_state(content: Dict) -> Dict:
     dedup = content.copy()
     dedup["chats"] = []
 
@@ -60,7 +58,7 @@ def get_state(initial_state: dict) -> State:
     try:
         config.load_incluster_config()
     except config.config_exception.ConfigException:
-        config.load_kube_config("/home/torben/.kube/rke2-admin-config")
+        config.load_kube_config()
 
     kubernetes_api_client = client.CoreV1Api()
     return ConfigmapState(kubernetes_api_client, initial_state)
