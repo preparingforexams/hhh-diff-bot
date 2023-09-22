@@ -38,6 +38,7 @@ jobs:
     name: "Publish to k8s"
     runs-on: ubuntu-latest
     needs: [lint, build_push_docker]
+    concurrency: production
     steps:
       - uses: actions/checkout@v4
       - run: sed -i -e "s/__TELEGRAM_TOKEN__/${{ secrets.BOT_TOKEN }}/g" values.yaml
