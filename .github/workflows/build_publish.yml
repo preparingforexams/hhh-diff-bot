@@ -9,7 +9,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: sed -i -e "s#__TAG__#${GITHUB_SHA}#g" values.yaml
       - uses: BlindfoldedSurgery/github-action-helm@v0.3.0
         with:
@@ -21,7 +21,7 @@ jobs:
   build_push_docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, build_push_docker]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: sed -i -e "s/__TELEGRAM_TOKEN__/${{ secrets.BOT_TOKEN }}/g" values.yaml
       - run: sed -i -e "s/__BING_IMAGE_API_SEARCH_KEY__/${{ secrets.BING_IMAGE_API_SEARCH_KEY }}/g" values.yaml
       - run: sed -i -e "s/__OPENAI_API_KEY__/${{ secrets.OPENAI_API_KEY }}/g" values.yaml
