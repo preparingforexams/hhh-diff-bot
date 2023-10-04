@@ -40,8 +40,4 @@ class User:
         return user
 
     def serialize(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "muted": self.muted,
-            "id": self.id
-        }
+        return {"name": self.name, "muted": self.muted, "id": self.id}

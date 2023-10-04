@@ -42,7 +42,7 @@ class Bot:
             "group_message_id": [],
             "recent_changes": [],
             "hhh_id": -1001473841450,
-            "pinned_message_id": None
+            "pinned_message_id": None,
         }
         self.state_filepath = state_filepath
 
@@ -85,37 +85,58 @@ class Bot:
             del context.chat_data["chat"]
 
     @Command(main_admin=True)
-    async def delete_chat_by_id(self, update: Update, context: CallbackContext) -> Optional[Message]:
+    async def delete_chat_by_id(
+        self, update: Update, context: CallbackContext
+    ) -> Optional[Message]:
         try:
             chat_id = int(context.args[0])
         except (IndexError, ValueError):
             return await update.effective_message.reply_text(
-                text=f"Enter a (valid) chat_id as an argument to use this command.")
+                text=f"Enter a (valid) chat_id as an argument to use this command."
+            )
 
         try:
             self.chats.pop(chat_id)
         except KeyError:
-            return await update.effective_message.reply_text(text=f"Not a valid chat_id.")
+            return await update.effective_message.reply_text(
+                text=f"Not a valid chat_id."
+            )
 
-    async def set_user_restriction(self, chat_id: int, user: User, until_date: timedelta, permissions: ChatPermissions,
-                                   reason: str = None) -> bool:
+    async def set_user_restriction(
+        self,
+        chat_id: int,
+        user: User,
+        until_date: timedelta,
+        permissions: ChatPermissions,
+        reason: str = None,
+    ) -> bool:
         timestamp: int = int((datetime.now() + until_date).timestamp())
         try:
-            result: bool = await self.application.bot.restrict_chat_member(chat_id, user.id, permissions,
-                                                                           until_date=timestamp)
+            result: bool = await self.application.bot.restrict_chat_member(
+                chat_id, user.id, permissions, until_date=timestamp
+            )
             if not permissions.can_send_messages:
-                datestring: str = str(until_date).rsplit(".")[0]  # str(timedelta) -> [D day[s], ][H]H:MM:SS[.UUUUUU]
+                datestring: str = str(until_date).rsplit(".")[
+                    0
+                ]  # str(timedelta) -> [D day[s], ][H]H:MM:SS[.UUUUUU]
                 message = f"{user.name} has been restricted for {datestring}."
                 if reason:
                     message += f"\nReason: {reason}"
-                await self.send_message(chat_id=chat_id, text=message, disable_notification=True)
+                await self.send_message(
+                    chat_id=chat_id, text=message, disable_notification=True
+                )
         except TelegramError as e:
-            if e.message == "Can't demote chat creator" and not permissions.can_send_messages:
-                message = "Sadly, user {} couldn't be restricted due to: `{}`. Shame on {}".format(user.name,
-                                                                                                   e.message,
-                                                                                                   user.name)
+            if (
+                e.message == "Can't demote chat creator"
+                and not permissions.can_send_messages
+            ):
+                message = "Sadly, user {} couldn't be restricted due to: `{}`. Shame on {}".format(
+                    user.name, e.message, user.name
+                )
                 self.logger.debug("{}".format(message))
-                await self.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+                await self.send_message(
+                    chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN
+                )
             self.logger.error(e)
             result = False
 
@@ -123,12 +144,18 @@ class Bot:
 
     async def unmute_user(self, chat_id: int, user: User) -> bool:
         result = False
-        permissions = ChatPermissions(can_send_messages=True, can_send_media_messages=True,
-                                      can_send_other_messages=True, can_add_web_page_previews=True)
+        permissions = ChatPermissions(
+            can_send_messages=True,
+            can_send_media_messages=True,
+            can_send_other_messages=True,
+            can_add_web_page_previews=True,
+        )
 
         try:
             # if self.updater.bot.promote_chat_member(chat_id, user.id, can_post_messages=True):
-            if await self.set_user_restriction(chat_id, user, timedelta(minutes=0), permissions):
+            if await self.set_user_restriction(
+                chat_id, user, timedelta(minutes=0), permissions
+            ):
                 user.muted = False
                 result = True
             else:
@@ -138,15 +165,22 @@ class Bot:
 
         return result
 
-    async def mute_user(self, chat_id: int, user: User, until_date: timedelta, reason: Optional[str] = None) -> bool:
+    async def mute_user(
+        self,
+        chat_id: int,
+        user: User,
+        until_date: timedelta,
+        reason: Optional[str] = None,
+    ) -> bool:
         if user.muted:
             return True
 
         permissions = ChatPermissions(can_send_messages=False)
         result = False
         self.logger.info(f"Reason for muting: {reason}")
-        if await self.set_user_restriction(chat_id, user, until_date=until_date, reason=reason,
-                                           permissions=permissions):
+        if await self.set_user_restriction(
+            chat_id, user, until_date=until_date, reason=reason, permissions=permissions
+        ):
             user.muted = True
             result = True
 
@@ -154,7 +188,9 @@ class Bot:
             def _set_user_unmute():
                 user.muted = False
 
-            self.logger.info(f"Set timer for {until_date.total_seconds()}s to set user mute state to `False`")
+            self.logger.info(
+                f"Set timer for {until_date.total_seconds()}s to set user mute state to `False`"
+            )
             Timer(until_date.total_seconds(), _set_user_unmute).start()
 
         return result
@@ -167,7 +203,9 @@ class Bot:
         self.state["recent_changes"] = [update] + rc
 
     @staticmethod
-    def create_latest_change_text(chat: Chat, new_title: str, delete: bool = False) -> str:
+    def create_latest_change_text(
+        chat: Chat, new_title: str, delete: bool = False
+    ) -> str:
         change = f"Added {chat.title}"
         if new_title:
             change = f"{chat.title} -> {new_title}"
@@ -176,7 +214,9 @@ class Bot:
 
         return change
 
-    def build_hhh_group_list_text(self, prefix: str = "", suffix: str = "") -> List[str]:
+    def build_hhh_group_list_text(
+        self, prefix: str = "", suffix: str = ""
+    ) -> List[str]:
         """
         For now, we'll assume that chats starting with the same letter will all fit into a single message
         :param prefix: Put in front of the constructed text for the groups names
@@ -194,8 +234,12 @@ class Bot:
         deductable_per_chat = 0
 
         for _, g in groupby(
-                sorted([chat for _, chat in self.chats.items() if chat and chat.title], key=lambda c: c.title.lower()),
-                key=lambda c: c.title[0].lower()):
+            sorted(
+                [chat for _, chat in self.chats.items() if chat and chat.title],
+                key=lambda c: c.title.lower(),
+            ),
+            key=lambda c: c.title[0].lower(),
+        ):
             line = " | ".join([chat.to_message_entry() for chat in g]) + "\n"
             if len(message) + len(line) - deductable_per_chat * len(list(g)) >= 4096:
                 messages.append(message)
@@ -232,10 +276,17 @@ class Bot:
         self.state["group_message_id"] = value
 
     async def delete_message(self, chat_id: str, message_id: str, *args, **kwargs):
-        return await self.application.bot.delete_message(chat_id=chat_id, message_id=message_id, *args, **kwargs)
+        return await self.application.bot.delete_message(
+            chat_id=chat_id, message_id=message_id, *args, **kwargs
+        )
 
-    async def update_hhh_message(self, chat: Chat, new_title: str = "", delete: bool = False,
-                                 create_changelog: bool = False):
+    async def update_hhh_message(
+        self,
+        chat: Chat,
+        new_title: str = "",
+        delete: bool = False,
+        create_changelog: bool = False,
+    ):
         if create_changelog:
             latest_change = self.create_latest_change_text(chat, new_title, delete)
             self.logger.debug(f"Add latest change {latest_change} to recent_changes")
@@ -249,9 +300,13 @@ class Bot:
             self.chats.pop(chat.id)
         self.logger.debug(f"Build new group list.")
 
-        total_group_count_text = f"{len([c for c in self.chats.values() if c.title])} groups in total"
+        total_group_count_text = (
+            f"{len([c for c in self.chats.values() if c.title])} groups in total"
+        )
         changes = "\n".join(["========", "\n".join(self.state["recent_changes"])])
-        messages = self.build_hhh_group_list_text(prefix=total_group_count_text, suffix=changes)
+        messages = self.build_hhh_group_list_text(
+            prefix=total_group_count_text, suffix=changes
+        )
 
         diff = len(messages) - len(self.group_message_ids)
         if diff > 0:
@@ -271,23 +326,31 @@ class Bot:
         for index, message_text in enumerate(messages):
             if not self.group_message_ids or index >= len(self.group_message_ids):
                 self.logger.debug(f"Send {len(messages)} new messages.")
-                message: Message = await self.send_message(chat_id=self.state["hhh_id"], text=message_text,
-                                                           parse_mode=ParseMode.HTML)
+                message: Message = await self.send_message(
+                    chat_id=self.state["hhh_id"],
+                    text=message_text,
+                    parse_mode=ParseMode.HTML,
+                )
                 self.group_message_ids = self.group_message_ids + [message.message_id]
 
                 if not pinned:
                     try:
                         if self.state.get("pinned_message_id"):
                             try:
-                                await self.application.bot.unpin_chat_message(chat_id=self.state["hhh_id"],
-                                                                              message_id=self.state[
-                                                                                  "pinned_message_id"])
+                                await self.application.bot.unpin_chat_message(
+                                    chat_id=self.state["hhh_id"],
+                                    message_id=self.state["pinned_message_id"],
+                                )
                             except BadRequest:
-                                self.logger.error("Couldn't unpin message", exc_info=True)
+                                self.logger.error(
+                                    "Couldn't unpin message", exc_info=True
+                                )
 
-                        await self.application.bot.pin_chat_message(chat_id=self.state["hhh_id"],
-                                                                    message_id=self.group_message_ids[0],
-                                                                    disable_notification=True)
+                        await self.application.bot.pin_chat_message(
+                            chat_id=self.state["hhh_id"],
+                            message_id=self.group_message_ids[0],
+                            disable_notification=True,
+                        )
 
                         self.state["pinned_message_id"] = self.group_message_ids[0]
                         pinned = True
@@ -296,26 +359,41 @@ class Bot:
                         pass
             else:
                 try:
-                    self.logger.debug(f"Edit an old message with the new text ({message_text})")
-                    await self.application.bot.edit_message_text(message_text, chat_id=self.state["hhh_id"],
-                                                                 message_id=self.group_message_ids[index],
-                                                                 disable_web_page_preview=True,
-                                                                 parse_mode=ParseMode.HTML)
+                    self.logger.debug(
+                        f"Edit an old message with the new text ({message_text})"
+                    )
+                    await self.application.bot.edit_message_text(
+                        message_text,
+                        chat_id=self.state["hhh_id"],
+                        message_id=self.group_message_ids[index],
+                        disable_web_page_preview=True,
+                        parse_mode=ParseMode.HTML,
+                    )
                 except BadRequest as e:
                     self.logger.exception("Couldn't edit message", exc_info=True)
                     if e.message == "Message to edit not found":
                         self.logger.debug("Try sending a new message")
                         self.group_message_ids = []
-                        return await self.update_hhh_message(chat, new_title=new_title, delete=delete,
-                                                             create_changelog=False)
+                        return await self.update_hhh_message(
+                            chat,
+                            new_title=new_title,
+                            delete=delete,
+                            create_changelog=False,
+                        )
 
     @Command()
-    async def handle_left_chat_member(self, update: Update, context: CallbackContext) -> None:
+    async def handle_left_chat_member(
+        self, update: Update, context: CallbackContext
+    ) -> None:
         chat: Chat = context.chat_data["chat"]
 
         if update.effective_message.left_chat_member.id != self.application.bot.id:
             try:
-                user: User = [user for user in chat.users if user.id == update.effective_message.left_chat_member.id][0]
+                user: User = [
+                    user
+                    for user in chat.users
+                    if user.id == update.effective_message.left_chat_member.id
+                ][0]
             except IndexError:
                 self.logger.error("Couldn't find user in chat")
             else:
@@ -326,11 +404,15 @@ class Bot:
 
     def set_state(self, state: Dict[str, Any]) -> None:
         self.state = state
-        self.chats = {schat["id"]: Chat.deserialize(schat, self.application.bot) for schat in state.get("chats", [])}
+        self.chats = {
+            schat["id"]: Chat.deserialize(schat, self.application.bot)
+            for schat in state.get("chats", [])
+        }
 
     async def send_message(self, *, chat_id: int, text: str, **kwargs) -> Message:
-        return await self.application.bot.send_message(chat_id=chat_id, text=text, disable_web_page_preview=True,
-                                                       **kwargs)
+        return await self.application.bot.send_message(
+            chat_id=chat_id, text=text, disable_web_page_preview=True, **kwargs
+        )
 
     def _get_chat_by_title(self, title: str) -> Optional[Chat]:
         for chat in self.chats.values():
@@ -340,13 +422,17 @@ class Bot:
         return None
 
     @Command()
-    async def show_users(self, update: Update, context: CallbackContext) -> Optional[Message]:
+    async def show_users(
+        self, update: Update, context: CallbackContext
+    ) -> Optional[Message]:
         from_chat: Chat = context.chat_data["chat"]
         if context.args:
             search_title = " ".join(context.args).strip()
             chat: Optional[Chat] = self._get_chat_by_title(search_title)
             if not chat:
-                return await self.send_message(chat_id=from_chat.id, text="This chat doesn't exist")
+                return await self.send_message(
+                    chat_id=from_chat.id, text="This chat doesn't exist"
+                )
         else:
             chat = from_chat
 
@@ -358,10 +444,14 @@ class Bot:
 
         return await self.send_message(chat_id=from_chat.id, text=message)
 
-    async def send_created_message(self, update: Update, context: CallbackContext) -> Message:
+    async def send_created_message(
+        self, update: Update, context: CallbackContext
+    ) -> Message:
         chat: Chat = context.chat_data["chat"]
 
-        message = await self.send_message(chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}")
+        message = await self.send_message(
+            chat_id=self.state["hhh_id"], text=f"Created {update.effective_chat.title}"
+        )
         chat.created_message_id = message.message_id
 
         return message
@@ -377,7 +467,9 @@ class Bot:
                 chat.users.add(User.from_tuser(member))
             else:
                 try:
-                    await self.update_hhh_message(context.chat_data["chat"], create_changelog=True)
+                    await self.update_hhh_message(
+                        context.chat_data["chat"], create_changelog=True
+                    )
                 except BadRequest:
                     self.logger.exception("Failed to update message", exc_info=True)
 
@@ -385,7 +477,9 @@ class Bot:
 
     @Command()
     async def status(self, update: Update, context: CallbackContext):
-        return await update.effective_message.reply_text(text=f"{context.chat_data['chat']}")
+        return await update.effective_message.reply_text(
+            text=f"{context.chat_data['chat']}"
+        )
 
     @Command()
     async def version(self, update: Update, context: CallbackContext):
@@ -393,28 +487,41 @@ class Bot:
 
     @Command()
     async def server_time(self, update: Update, context: CallbackContext):
-        return await update.effective_message.reply_text(datetime.now().strftime("%d-%m-%Y %H-%M-%S"))
+        return await update.effective_message.reply_text(
+            datetime.now().strftime("%d-%m-%Y %H-%M-%S")
+        )
 
     @Command()
     async def get_data(self, update: Update, context: CallbackContext) -> Message:
         chat: Chat = context.chat_data["chat"]
-        data = [_chat for _chat in self.state.get("chats", []) if _chat.get("id") == chat.id]
+        data = [
+            _chat for _chat in self.state.get("chats", []) if _chat.get("id") == chat.id
+        ]
 
         if data:
             with tempfile.TemporaryFile() as temp:
                 temp.write(json.dumps(data[0]).encode("utf-8"))
                 temp.seek(0)
-                return await self.application.bot.send_document(chat_id=chat.id, document=temp,
-                                                                filename=f"{chat.title}.json")
+                return await self.application.bot.send_document(
+                    chat_id=chat.id, document=temp, filename=f"{chat.title}.json"
+                )
         else:
-            return await update.effective_message.reply_text("Couldn't find any data for this chat.")
+            return await update.effective_message.reply_text(
+                "Couldn't find any data for this chat."
+            )
 
     @Command(chat_admin=True)
     async def mute(self, update: Update, context: CallbackContext):
         if not context.args:
             message = "Please provide a user and an optional timeout (`/mute <user> [<timeout in minutes>] [<reason>]`)"
-            self.logger.warning("No arguments have been provided, don't execute `mute`.")
-            return await self.send_message(chat_id=update.message.chat_id, text=message, parse_mode=ParseMode.MARKDOWN)
+            self.logger.warning(
+                "No arguments have been provided, don't execute `mute`."
+            )
+            return await self.send_message(
+                chat_id=update.message.chat_id,
+                text=message,
+                parse_mode=ParseMode.MARKDOWN,
+            )
 
         username = context.args[0]
         minutes = 15
@@ -423,7 +530,9 @@ class Bot:
         try:
             minutes = int(context.args[1])
         except (IndexError, ValueError):
-            self.logger.error("Exception while getting time string from mute command", exc_info=True)
+            self.logger.error(
+                "Exception while getting time string from mute command", exc_info=True
+            )
 
         mute_time = timedelta(minutes=minutes)
         chat = context.chat_data["chat"]
@@ -431,18 +540,28 @@ class Bot:
         try:
             user = next(filter(lambda x: x.name == username, chat.users))
         except StopIteration:
-            self.logger.warning(f"Couldn't find user {username} in users for chat {update.message.chat_id}",
-                                exc_info=True)
-            return await update.effective_message.reply_text(f"Can't mute {username} (not found in current chat).")
+            self.logger.warning(
+                f"Couldn't find user {username} in users for chat {update.message.chat_id}",
+                exc_info=True,
+            )
+            return await update.effective_message.reply_text(
+                f"Can't mute {username} (not found in current chat)."
+            )
         else:
-            return await self.mute_user(update.message.chat_id, user, until_date=mute_time, reason=reason)
+            return await self.mute_user(
+                update.message.chat_id, user, until_date=mute_time, reason=reason
+            )
 
     @Command(chat_admin=True)
     async def unmute(self, update: Update, context: CallbackContext):
         if not context.args:
             message = "You have to provide a user which should be unmuted."
-            self.logger.warning("No arguments have been provided, don't execute `unmute`.")
-            return await update.effective_message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+            self.logger.warning(
+                "No arguments have been provided, don't execute `unmute`."
+            )
+            return await update.effective_message.reply_text(
+                message, parse_mode=ParseMode.MARKDOWN
+            )
 
         username: str = context.args[0].strip()
         chat: Chat = context.chat_data["chat"]
@@ -458,16 +577,26 @@ class Bot:
             return
 
         try:
-            user = next(filter(lambda x: x.name.lower() == username.lower(), chat.users))
+            user = next(
+                filter(lambda x: x.name.lower() == username.lower(), chat.users)
+            )
         except StopIteration:
-            self.logger.warning(f"Couldn't find user {username} in users for chat {update.message.chat_id}",
-                                exc_info=True)
-            return await update.effective_message.reply_text(f"Can't unmute {username} (not found in current chat).")
+            self.logger.warning(
+                f"Couldn't find user {username} in users for chat {update.message.chat_id}",
+                exc_info=True,
+            )
+            return await update.effective_message.reply_text(
+                f"Can't unmute {username} (not found in current chat)."
+            )
         else:
             if self.unmute_user(chat.id, user):
-                return await update.effective_message.reply_text(f"Successfully unmuted {username}.")
+                return await update.effective_message.reply_text(
+                    f"Successfully unmuted {username}."
+                )
             else:
-                return await update.effective_message.reply_text(f"Failed to unmute {username}.")
+                return await update.effective_message.reply_text(
+                    f"Failed to unmute {username}."
+                )
 
     async def kick_user(self, chat: Chat, user_id: int):
         # since we only want to kick the user we can unban them immediately after, since we don't want to ensure
@@ -475,7 +604,9 @@ class Bot:
         # Note: "If user is banned for more than 366 days or less than 30 seconds
         #        from the current time they are considered to be banned forever."
         ban_until = datetime.now() + timedelta(minutes=1)
-        return await self.application.bot.ban_chat_member(chat_id=chat.id, user_id=user_id, until_date=ban_until)
+        return await self.application.bot.ban_chat_member(
+            chat_id=chat.id, user_id=user_id, until_date=ban_until
+        )
 
     @Command(chat_admin=True)
     async def kick(self, update: Update, context: CallbackContext):
@@ -483,8 +614,12 @@ class Bot:
 
         if not context.args:
             message = "Please provide a user and an optional reason(`/kick <user> [<reason>]`)"
-            self.logger.warning("No arguments have been provided, don't execute `kick`.")
-            return await update.message.reply_text(text=message, parse_mode=ParseMode.MARKDOWN)
+            self.logger.warning(
+                "No arguments have been provided, don't execute `kick`."
+            )
+            return await update.message.reply_text(
+                text=message, parse_mode=ParseMode.MARKDOWN
+            )
 
         username = context.args[0]
         reason = " ".join(context.args[1:])
@@ -492,9 +627,13 @@ class Bot:
         try:
             user: User = next(filter(lambda x: x.name == username, chat.users))
         except StopIteration:
-            self.logger.warning(f"Couldn't find user {username} in users for chat {update.message.chat_id}",
-                                exc_info=True)
-            return await update.effective_message.reply_text(f"Can't kick {username} (not found in current chat).")
+            self.logger.warning(
+                f"Couldn't find user {username} in users for chat {update.message.chat_id}",
+                exc_info=True,
+            )
+            return await update.effective_message.reply_text(
+                f"Can't kick {username} (not found in current chat)."
+            )
         else:
             try:
                 result = await self.kick_user(chat, user.id)
@@ -519,12 +658,16 @@ class Bot:
         chat: Chat = context.chat_data["chat"]
         new_title = update.effective_message.new_chat_title
 
-        return await self.update_hhh_message(chat, new_title=new_title, create_changelog=True)
+        return await self.update_hhh_message(
+            chat, new_title=new_title, create_changelog=True
+        )
 
     @Command()
     async def chat_created(self, update: Update, context: CallbackContext):
         try:
-            await self.update_hhh_message(context.chat_data["chat"], create_changelog=True)
+            await self.update_hhh_message(
+                context.chat_data["chat"], create_changelog=True
+            )
         except BadRequest:
             self.logger.exception("Failed to update message", exc_info=True)
 
@@ -536,7 +679,9 @@ class Bot:
         if context.args:
             invite_link: str = context.args[0]
         else:
-            return await update.effective_message.reply_text("Provide an invite link moron")
+            return await update.effective_message.reply_text(
+                "Provide an invite link moron"
+            )
 
         if _validate_invite_link(invite_link):
             chat.invite_link = invite_link
@@ -546,19 +691,25 @@ class Bot:
 
             if chat.created_message_id:
                 text = f"Created {chat.to_message_entry()}"
-                return await self.application.bot.edit_message_text(text, chat_id=self.state["hhh_id"],
-                                                                    message_id=chat.created_message_id,
-                                                                    parse_mode=ParseMode.HTML)
+                return await self.application.bot.edit_message_text(
+                    text,
+                    chat_id=self.state["hhh_id"],
+                    message_id=chat.created_message_id,
+                    parse_mode=ParseMode.HTML,
+                )
         else:
             return await update.effective_message.reply_text(
-                "invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...] | t.me/[...]")
+                "invite link isn't in a correct form (tg://join?invite=[...] | https://t.me/joinchat/[...] | t.me/[...]"
+            )
 
     @Command()
     async def get_invite_link(self, update: Update, context: CallbackContext):
         if context.args:
             group_name: str = " ".join(context.args)
         else:
-            return await update.effective_message.reply_text("Provide a group name moron")
+            return await update.effective_message.reply_text(
+                "Provide a group name moron"
+            )
 
         try:
             chat: Chat = [c for c in self.chats.values() if c.title == group_name][0]
@@ -568,7 +719,9 @@ class Bot:
         if chat.invite_link:
             return await update.effective_message.reply_text(chat.invite_link)
         else:
-            return await update.effective_message.reply_text("No invite link found for the given group")
+            return await update.effective_message.reply_text(
+                "No invite link found for the given group"
+            )
 
     @Command(chat_admin=True)
     async def remove_invite_link(self, update: Update, context: CallbackContext):
@@ -580,7 +733,9 @@ class Bot:
     async def migrate_chat_id(self, update: Update, context: CallbackContext):
         self.logger.debug(f"Migrating {update.effective_message}")
         if not update.effective_message.migrate_from_chat_id:
-            self.logger.warning("Aborting migration since `migrate_from_chat_id` is unset, see #49")
+            self.logger.warning(
+                "Aborting migration since `migrate_from_chat_id` is unset, see #49"
+            )
             return None
 
         from_id = int(update.effective_message.migrate_from_chat_id)
@@ -620,11 +775,15 @@ class Bot:
 
         thumbnail = generate_thumbnail(chat.title)
         if not thumbnail:
-            return await self.send_message(chat_id=chat.id, text="failed to generate photo")
+            return await self.send_message(
+                chat_id=chat.id, text="failed to generate photo"
+            )
         try:
             return await self.application.bot.set_chat_photo(chat.id, thumbnail)
         except BadRequest as e:
-            return await self.send_message(chat_id=chat.id, text=f"failed to update photo: {e}")
+            return await self.send_message(
+                chat_id=chat.id, text=f"failed to update photo: {e}"
+            )
 
     @Command()
     async def set_premium_users_only(self, update: Update, context: CallbackContext):
@@ -637,8 +796,7 @@ class Bot:
         chat.premium_users_only = state
 
         msg = "non premium-users will be kicked from this group when they interact with this chat again"
-        return await self.send_message(chat_id=chat.id,
-                                       text=msg)
+        return await self.send_message(chat_id=chat.id, text=msg)
 
 
 def _split_messages(lines):

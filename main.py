@@ -1,17 +1,21 @@
 import os
 import sys
-import threading
 from typing import Callable, Dict
 
-from telegram.ext import CommandHandler, MessageHandler, filters
 from telegram.ext import ApplicationBuilder
+from telegram.ext import CommandHandler, MessageHandler, filters
 
 from telegram_bot import Bot, create_logger
 
 
-def update_state(state_filepath: str, *, state_mutation_function: Callable[[Dict], Dict] | None = None,
-                 chat_mutation_function: Callable[[Dict], Dict] | None = None):
+def update_state(
+    state_filepath: str,
+    *,
+    state_mutation_function: Callable[[Dict], Dict] | None = None,
+    chat_mutation_function: Callable[[Dict], Dict] | None = None,
+):
     import json
+
     if not state_mutation_function:
         state_mutation_function = lambda x: x
     if not chat_mutation_function:
@@ -75,9 +79,15 @@ def start(bot_token: str, state_file: str):
     application.add_handler(CommandHandler("unmute", bot.unmute))
     application.add_handler(CommandHandler("kick", bot.kick))
     application.add_handler(CommandHandler("add_invite_link", bot.add_invite_link))
-    application.add_handler(CommandHandler("remove_invite_link", bot.remove_invite_link))
-    application.add_handler(CommandHandler("renew_diff_message", bot.renew_diff_message))
-    application.add_handler(CommandHandler("set_premium_users_only", bot.set_premium_users_only))
+    application.add_handler(
+        CommandHandler("remove_invite_link", bot.remove_invite_link)
+    )
+    application.add_handler(
+        CommandHandler("renew_diff_message", bot.renew_diff_message)
+    )
+    application.add_handler(
+        CommandHandler("set_premium_users_only", bot.set_premium_users_only)
+    )
 
     # Debugging
     application.add_handler(CommandHandler("status", bot.status))
@@ -85,11 +95,22 @@ def start(bot_token: str, state_file: str):
     application.add_handler(CommandHandler("version", bot.version))
 
     application.add_handler(
-        MessageHandler(filters.StatusUpdate.LEFT_CHAT_MEMBER, bot.handle_left_chat_member))
-    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, bot.new_member))
-    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_TITLE, bot.new_chat_title))
-    application.add_handler(MessageHandler(filters.StatusUpdate.CHAT_CREATED, bot.chat_created))
-    application.add_handler(MessageHandler(filters.StatusUpdate.MIGRATE, bot.migrate_chat_id))
+        MessageHandler(
+            filters.StatusUpdate.LEFT_CHAT_MEMBER, bot.handle_left_chat_member
+        )
+    )
+    application.add_handler(
+        MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, bot.new_member)
+    )
+    application.add_handler(
+        MessageHandler(filters.StatusUpdate.NEW_CHAT_TITLE, bot.new_chat_title)
+    )
+    application.add_handler(
+        MessageHandler(filters.StatusUpdate.CHAT_CREATED, bot.chat_created)
+    )
+    application.add_handler(
+        MessageHandler(filters.StatusUpdate.MIGRATE, bot.migrate_chat_id)
+    )
     application.add_handler(MessageHandler(filters.ALL, bot.noop))
 
     logger.debug(f"Read state from {state_file}")
@@ -113,15 +134,19 @@ def get_token() -> str:
         with open("secrets.json") as f:
             content = json.load(f)
             # noinspection PyShadowingNames
-            token = content.get('token', os.getenv("BOT_TOKEN"))
+            token = content.get("token", os.getenv("BOT_TOKEN"))
             if not token:
-                raise ValueError("`token` not defined, either set `BOT_TOKEN` or `token` in `secrets.json`")
+                raise ValueError(
+                    "`token` not defined, either set `BOT_TOKEN` or `token` in `secrets.json`"
+                )
 
     return token
 
 
 if __name__ == "__main__":
-    state_filepath = "state.json" if os.path.exists("state.json") else "/data/state.json"
+    state_filepath = (
+        "state.json" if os.path.exists("state.json") else "/data/state.json"
+    )
     update_state(state_filepath, state_mutation_function=cleanup_state)
     import json
 

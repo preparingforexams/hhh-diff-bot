@@ -62,8 +62,12 @@ class Chat:
         return result
 
     def serialize(self) -> Dict[str, Any]:
-        chat_type = self.type if isinstance(self.type, ChatType) else ChatType(self.type)
-        last_chat_event_isotime = self.last_chat_event_time.isoformat() if self.last_chat_event_time else None
+        chat_type = (
+            self.type if isinstance(self.type, ChatType) else ChatType(self.type)
+        )
+        last_chat_event_isotime = (
+            self.last_chat_event_time.isoformat() if self.last_chat_event_time else None
+        )
 
         serialized = {
             "id": self.id,
@@ -86,16 +90,16 @@ class Chat:
     @classmethod
     def deserialize(cls, json_object: Dict, bot: TBot) -> Optional[Chat]:
         try:
-            chat = Chat(
-                json_object["id"],
-                bot
-            )
+            chat = Chat(json_object["id"], bot)
         except (TypeError, ValueError):
             create_logger("Chat.deserialize").error("chat_id was None")
             return None
         pmi = json_object.get("pinned_message_id", "")
         chat.pinned_message_id = int(pmi) if pmi else ""
-        chat.users = {User.deserialize(user_json_object) for user_json_object in json_object.get("users", [])}
+        chat.users = {
+            User.deserialize(user_json_object)
+            for user_json_object in json_object.get("users", [])
+        }
         chat.title = json_object.get("title", None)
         chat.invite_link = json_object.get("invite_link", None)
         chat.description = json_object.get("description", None)
@@ -108,16 +112,20 @@ class Chat:
         return chat
 
     @group
-    def pin_message(self, message_id: int, disable_notifications: bool = True, unpin: bool = False) -> bool:
+    def pin_message(
+        self, message_id: int, disable_notifications: bool = True, unpin: bool = False
+    ) -> bool:
         if unpin:
             self.logger.debug("Force unpin before pinning")
             self.unpin_message()
 
         successful_pin = False
         try:
-            successful_pin = self.bot.pin_chat_message(chat_id=self.id,
-                                                       message_id=message_id,
-                                                       disable_notification=disable_notifications)
+            successful_pin = self.bot.pin_chat_message(
+                chat_id=self.id,
+                message_id=message_id,
+                disable_notification=disable_notifications,
+            )
         except TelegramError as e:
             self.logger.error(f"Couldn't pin message due to error: {e}")
 
@@ -173,7 +181,9 @@ class Chat:
         administrators: Set[User] = set()
 
         try:
-            chat_administrators = await self.bot.get_chat_administrators(chat_id=self.id)
+            chat_administrators = await self.bot.get_chat_administrators(
+                chat_id=self.id
+            )
         except TelegramError:
             return administrators
 
@@ -209,7 +219,7 @@ class Chat:
     def to_message_entry(self):
         try:
             if self.invite_link:
-                return f"<a href=\"{self.invite_link}\">{self.title}</a>"
+                return f'<a href="{self.invite_link}">{self.title}</a>'
             else:
                 return f"{self.title}"
         except AttributeError:
