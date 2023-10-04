@@ -92,7 +92,7 @@ class Command:
                     log.info(f"creating invite link for {current_chat.title}")
                     try:
                         current_chat.invite_link = (await update.effective_chat.create_invite_link()).invite_link
-                        await clazz.update_hhh_message(current_chat, retry=False)
+                        await clazz.update_hhh_message(current_chat)
                     except BadRequest:
                         log.exception("failed creating invite link or updating message: ", exc_info=True)
                         pass
