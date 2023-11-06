@@ -2,7 +2,8 @@ import inspect
 
 import openai as openai
 import requests
-from openai import InvalidRequestError, OpenAIError
+from openai import OpenAIError, BadRequestError
+from openai.types import ImagesResponse
 from requests import RequestException
 
 from .logger import create_logger
@@ -13,13 +14,13 @@ def generate_thumbnail(title: str):
     logger.debug(f"generate thumbnail for {title}")
 
     try:
-        response = openai.Image.create(
+        response: ImagesResponse = openai.images.generate(
             prompt=title,
             n=1,
             size="512x512",
             response_format="url",
         )
-    except InvalidRequestError as e:
+    except BadRequestError as e:
         # Only ever saw this because of their profanity filter. Of course the error
         # code was fucking None, so I would have to check the message to make sure
         # that the error is actually about their "safety system", but I won't.
@@ -29,9 +30,20 @@ def generate_thumbnail(title: str):
         logger.error("An error occurred during image generation", exc_info=e)
 
         return None
-    url = response["data"][0]["url"]
+
+    url = None
+    try:
+        url = response.data[0].url
+    except IndexError:
+        logger.error("no items in `ImagesResponse`")
+        pass
+    if not url:
+        logger.error("`url` from `ImagesResponse` is empty")
+        return None
 
     try:
+        # we make sure that url is a string
+        # noinspection PyTypeChecker
         response = requests.get(url, timeout=60)
     except RequestException as e:
         logger.error("Could not get generated image", exc_info=e)
