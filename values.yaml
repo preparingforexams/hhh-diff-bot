@@ -33,6 +33,7 @@ secret:
 configmap:
   name: hhh-diff-bot
   ageThresholdDays: 30
+  ignoreUsernamesForMembership: "nhbot,group,Ich bin ganz Ohr,let there be diffs,cancer no more,i own groups,info bot"
 
 telegram:
   mainAdminIds:

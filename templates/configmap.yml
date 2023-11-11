@@ -5,3 +5,4 @@ metadata:
   namespace: {{ .Values.namespace | default .Release.Namespace }}
 data:
   AGE_THRESHOLD_DAYS: {{ .Values.configmap.ageThresholdDays | quote }}
+  IGNORE_USERNAMES_FOR_MEMBERSHIP: "{{ .Values.configmap.ignoreUsernamesForMembership }}"
