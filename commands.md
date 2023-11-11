@@ -15,4 +15,5 @@ get_invite_link - (<group_name>) gets the invite link for the given group (when 
 renew_diff_message - Sends the diff message to the group again (does not delete the old one)
 set_photo - (<overwrite>) sets a chat photo, does not overwrite an existing one by default
 set_premium_users_only - ([<bool>]) only allows premium users to be in this chat (will be checked on every update to the chat - kick of existing non-premium users is possible)
+global_membership_info - ([<limit=10>]) shows {limit} users who are in the most groups (including the group count)
 ```

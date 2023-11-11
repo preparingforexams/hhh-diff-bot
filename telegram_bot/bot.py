@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+from collections import defaultdict
 from datetime import datetime, timedelta
 from enum import Enum
 from itertools import zip_longest, groupby
@@ -639,6 +640,30 @@ class Bot:
         msg = "non premium-users will be kicked from this group when they interact with this chat again"
         return await self.send_message(chat_id=chat.id,
                                        text=msg)
+
+    @Command()
+    async def global_membership_info(self, update: Update, context: CallbackContext):
+        limit = 10
+        if context.args and len(context.args) == 1:
+            try:
+                limit = int(context.args[0])
+            except ValueError:
+                pass
+
+        user_count = defaultdict(int)
+        ignore_names = os.getenv("IGNORE_USERNAMES_FOR_MEMBERSHIP") or ""
+        ignore_names = [name.strip().lower() for name in ignore_names.split(",")]
+
+        for chat in self.state["chats"]:
+            for user in chat["users"]:
+                if user["name"].lower() not in ignore_names:
+                    user_count[user["name"]] += 1
+
+        user_count = sorted(user_count.items(), key=lambda item: item[1], reverse=True)
+        user_count = user_count[:limit]
+
+        message = "\n".join([f"{name}: {count}" for name, count in user_count])
+        return await update.effective_message.reply_text(message)
 
 
 def _split_messages(lines):

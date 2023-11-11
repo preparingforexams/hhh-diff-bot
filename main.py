@@ -64,6 +64,9 @@ def start(bot_token: str, state_file: str):
     application.add_handler(CommandHandler("users", bot.show_users))
     application.add_handler(CommandHandler("get_invite_link", bot.get_invite_link))
     application.add_handler(CommandHandler("set_photo", bot.set_chat_photo))
+    application.add_handler(
+        CommandHandler("global_membership_info", bot.global_membership_info)
+    )
 
     # main_admin
     application.add_handler(CommandHandler("delete_chat_by_id", bot.delete_chat_by_id))
