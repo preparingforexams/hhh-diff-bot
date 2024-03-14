@@ -4,6 +4,9 @@ WORKDIR /usr/src/app
 
 ENV PYTHONUNBUFFERED=1
 
+ARG APP_VERSION
+ENV APP_VERSION=$APP_VERSION
+
 ADD requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

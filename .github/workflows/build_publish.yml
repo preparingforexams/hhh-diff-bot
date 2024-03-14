@@ -19,24 +19,15 @@ jobs:
           raw_command: lint --strict
 
   build_push_docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - run: sed -i -e "s/{{VERSION}}/${GITHUB_SHA}/g" telegram_bot/bot.py
-      - name: Build the tagged Docker image
-        run: docker build -t ghcr.io/preparingforexams/hhh-diff-bot:${GITHUB_SHA} .
-      - name: Push the tagged Docker image
-        run: docker push ghcr.io/preparingforexams/hhh-diff-bot:${GITHUB_SHA}
+    uses: BlindfoldedSurgery/actions-container/.github/workflows/build-image-docker.yml@v3
+    with:
+      platform: "linux/arm64"
+      push-image: ${{ github.ref_name == github.event.repository.default_branch }}
 
   deploy:
     name: "Publish to k8s"
-    runs-on: ubuntu-latest
+    container: ghcr.io/bjoernpetersen/helm:2.0.1
+    runs-on: born-prep
     needs: [lint, build_push_docker]
     concurrency: production
     steps:
@@ -51,7 +42,7 @@ jobs:
           subcommand: upgrade
           ref: .
           release_name: hhhdiffbot
-          namespace: telegram-bots
+          namespace: hhh-diff-bot
           atomic: true
           install: true
-          kubeconfig: ${{ secrets.KUBECONFIG_RAW }}
+          kubeconfig: ${{ secrets.BORN_KUBECONFIG_RAW }}

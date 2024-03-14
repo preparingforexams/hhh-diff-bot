@@ -389,7 +389,8 @@ class Bot:
 
     @Command()
     async def version(self, update: Update, context: CallbackContext):
-        return await update.effective_message.reply_text("{{VERSION}}")
+        version = os.getenv("APP_VERSION", "unknown")
+        return await update.effective_message.reply_text(version)
 
     @Command()
     async def server_time(self, update: Update, context: CallbackContext):
