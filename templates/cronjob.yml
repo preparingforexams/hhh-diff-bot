@@ -2,7 +2,6 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ .Values.cronjob.name }}
-  namespace: {{ .Values.namespace | default .Release.Namespace }}
 spec:
   schedule: "{{ .Values.cronjob.schedule }}"
   successfulJobsHistoryLimit: {{ .Values.cronjob.successfulJobsHistoryLimit }}
