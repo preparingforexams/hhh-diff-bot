@@ -23,9 +23,6 @@ spec:
       - name: {{ .Values.deployment.name }}
         image: {{ .Values.deployment.image }}
         imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
-        command:
-          - sleep
-          - infinity
         env:
           - name: MAIN_ADMIN_IDS
             value: {{ .Values.telegram.mainAdminIds | toJson | quote }}
