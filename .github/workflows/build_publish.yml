@@ -26,7 +26,7 @@ jobs:
 
   deploy:
     name: "Publish to k8s"
-    container: ghcr.io/bjoernpetersen/helm:2.0.1
+    container: ghcr.io/bjoernpetersen/helm:2.1.0
     runs-on: born-prep
     needs: [lint, build_push_docker]
     concurrency: production
