@@ -9,6 +9,8 @@ users.json
 credentials.json
 state.json
 
+
+*_cache/
 __pycache__/
 
 # Documentation (pdoc)

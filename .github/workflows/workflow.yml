@@ -1,0 +1,52 @@
+name: Workflow
+
+on:
+  push:
+    branches: [ main ]
+  pull_request: { }
+
+jobs:
+  validate-renovate-config:
+    uses: BlindfoldedSurgery/renovate-config/.github/workflows/validate.yml@main
+
+  lint:
+    uses: BlindfoldedSurgery/actions-python/.github/workflows/lint.yml@v1
+    with:
+      python-version: '3.12'
+
+  test:
+    uses: BlindfoldedSurgery/actions-python/.github/workflows/test.yml@v1
+    with:
+      python-version: '3.12'
+
+  build-container-image:
+    needs:
+      - lint
+      - test
+    uses: BlindfoldedSurgery/actions-container/.github/workflows/build-image-docker.yml@v3
+    with:
+      platform: 'linux/arm64'
+      push-image: ${{ github.ref_name == github.event.repository.default_branch }}
+
+  deploy:
+    runs-on: born-prep
+    container: ghcr.io/bjoernpetersen/helm:2.1.0
+    needs:
+      - build-container-image
+    if: success() && github.ref_name == github.event.repository.default_branch
+    concurrency: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: sed -i -e "s/__TELEGRAM_TOKEN__/${{ secrets.BOT_TOKEN }}/g" values.yaml
+      - run: sed -i -e "s/__BING_IMAGE_API_SEARCH_KEY__/${{ secrets.BING_IMAGE_API_SEARCH_KEY }}/g" values.yaml
+      - run: sed -i -e "s/__OPENAI_API_KEY__/${{ secrets.OPENAI_API_KEY }}/g" values.yaml
+      - run: sed -i -e "s/__TAG__/${GITHUB_SHA}/g" values.yaml
+      - uses: WyriHaximus/github-action-helm3@v4
+        with:
+          exec: helm upgrade hhhdiffbot . --install --namespace=hhh-diff-bot --atomic
+          kubeconfig: '${{ secrets.BORN_KUBECONFIG_RAW }}'
+
+  clean:
+    concurrency: cleanup
+    needs: [ deploy ]
+    uses: BlindfoldedSurgery/actions-container/.github/workflows/clean.yml@v3

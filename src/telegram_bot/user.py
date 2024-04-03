@@ -34,14 +34,10 @@ class User:
 
     @classmethod
     def deserialize(cls, json: Dict[str, Any]) -> User:
-        user = User(json.get("name"), json.get("id"))
+        user = User(json.get("name"), json.get("id"))  # type: ignore
         user.muted = json.get("muted", False)
 
         return user
 
     def serialize(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "muted": self.muted,
-            "id": self.id
-        }
+        return {"name": self.name, "muted": self.muted, "id": self.id}

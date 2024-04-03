@@ -1,0 +1,53 @@
+[tool.poetry]
+name = "telegram-bot"
+description = ""
+version = "1.0.0"
+authors = ["BlindfoldedSurgery <team@blindfolded.surgery>"]
+license = "MIT"
+
+[[tool.poetry.source]]
+name = "internal"
+url = "https://pypi.blindfolded.surgery"
+priority = "explicit"
+
+[tool.poetry.dependencies]
+python = "~3.12"
+openai = "^1.16.1"
+python-telegram-bot = "~21.0"
+requests = "^2.31.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.0.0"
+mypy = "~1.9"
+pytest = "^8.0.0"
+ruff = "0.3.5"
+types-requests = "^2.31.0.20240403"
+
+[build-system]
+requires = ["poetry-core>=1.3.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+# strict = true
+# check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+check_untyped_defs = true
+allow_untyped_defs = true
+allow_incomplete_defs = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+
+[tool.ruff.lint]
+extend-select = [
+    "I001",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["telegram_bot"]
