@@ -2,7 +2,7 @@ import inspect
 
 import openai as openai
 import requests
-from openai import OpenAIError, BadRequestError
+from openai import BadRequestError, OpenAIError
 from openai.types import ImagesResponse
 from requests import RequestException
 
@@ -10,11 +10,11 @@ from .logger import create_logger
 
 
 def generate_thumbnail(title: str):
-    logger = create_logger(inspect.currentframe().f_code.co_name)
+    logger = create_logger(inspect.currentframe().f_code.co_name)  # type: ignore
     logger.debug(f"generate thumbnail for {title}")
 
     try:
-        response: ImagesResponse = openai.images.generate(
+        image_response: ImagesResponse = openai.images.generate(
             prompt=title,
             n=1,
             size="512x512",
@@ -33,7 +33,7 @@ def generate_thumbnail(title: str):
 
     url = None
     try:
-        url = response.data[0].url
+        url = image_response.data[0].url
     except IndexError:
         logger.error("no items in `ImagesResponse`")
         pass
@@ -43,7 +43,6 @@ def generate_thumbnail(title: str):
 
     try:
         # we make sure that url is a string
-        # noinspection PyTypeChecker
         response = requests.get(url, timeout=60)
     except RequestException as e:
         logger.error("Could not get generated image", exc_info=e)

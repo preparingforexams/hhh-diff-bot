@@ -2,17 +2,13 @@ from __future__ import annotations
 
 import functools
 import inspect
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from telegram import Update
 from telegram.error import BadRequest, TelegramError
 from telegram.ext import CallbackContext
 
-from . import bot
-from . import chat
-from . import logger
-from . import user
+from . import bot, chat, logger, user
 
 
 class Command:
@@ -22,25 +18,28 @@ class Command:
 
     @staticmethod
     def _add_chat(clazz, update: Update, context: CallbackContext) -> chat.Chat:
-        log = logger.create_logger(f"_add_chat")
-        log.debug(f"Start with {update.effective_chat.id}")
-        new_chat = clazz.chats.get(update.effective_chat.id)
+        log = logger.create_logger("_add_chat")
+        effective_chat = update.effective_chat
+        if effective_chat is None:
+            raise ValueError("No effective chat")
+        log.debug(f"Start with {effective_chat.id}")
+        new_chat = clazz.chats.get(effective_chat.id)
         if new_chat is None:
             log.debug("Creating new chat")
-            new_chat = chat.Chat(update.effective_chat.id, clazz.application.bot)
-            new_chat.title = update.effective_chat.title
+            new_chat = chat.Chat(effective_chat.id, clazz.application.bot)
+            new_chat.title = effective_chat.title
             clazz.chats[new_chat.id] = new_chat
 
             log.debug(f"Created new chat ({new_chat})")
 
-        context.chat_data["chat"] = new_chat
+        context.chat_data["chat"] = new_chat  # type: ignore[index]
 
         log.debug(f"End with {new_chat}")
         return new_chat
 
     @staticmethod
     def _add_user(update: Update, context: CallbackContext) -> user.User:
-        return user.User.from_tuser(update.effective_user)
+        return user.User.from_tuser(update.effective_user)  # type: ignore[arg-type]
 
     def __call__(self, func):
         @functools.wraps(func)
@@ -73,28 +72,40 @@ class Command:
             if not current_chat:
                 current_chat = self._add_chat(clazz, update, context)
             if not current_chat.title:
-                log.debug(f"Assign title ({update.effective_chat.title}) to chat ({current_chat}) (previously missing)")
+                log.debug(
+                    f"Assign title ({update.effective_chat.title}) to chat ({current_chat}) (previously missing)"
+                )
                 current_chat.title = update.effective_chat.title
             current_chat.last_chat_event_time = datetime.now()
 
             is_group_chat = current_chat.is_group()
             log.debug(f"Checking for group chat: {is_group_chat}")
             if is_group_chat:
-                chat_admins = [admin.user.id for admin in
-                               await current_chat.bot.get_chat_administrators(chat_id=current_chat.id)]
+                chat_admins = [
+                    admin.user.id
+                    for admin in await current_chat.bot.get_chat_administrators(
+                        chat_id=current_chat.id
+                    )
+                ]
                 bot_id = (await clazz.me()).id
                 bot_is_admin = bot_id in chat_admins
                 log.debug(f"bot id: {bot_id} | admin ids: {chat_admins}")
                 create_invite_link = not current_chat.invite_link and bot_is_admin
                 log.debug(
-                    f"invite link create decision: not {current_chat.invite_link} and {bot_is_admin} -> {create_invite_link}")
+                    f"invite link create decision: not {current_chat.invite_link} and {bot_is_admin} -> {create_invite_link}"
+                )
                 if create_invite_link:
                     log.info(f"creating invite link for {current_chat.title}")
                     try:
-                        current_chat.invite_link = (await update.effective_chat.create_invite_link()).invite_link
+                        current_chat.invite_link = (
+                            await update.effective_chat.create_invite_link()
+                        ).invite_link
                         await clazz.update_hhh_message(current_chat)
                     except BadRequest:
-                        log.exception("failed creating invite link or updating message: ", exc_info=True)
+                        log.exception(
+                            "failed creating invite link or updating message: ",
+                            exc_info=True,
+                        )
                         pass
             else:
                 log.debug(f"chat is not a group chat ({current_chat.type})")
@@ -118,8 +129,12 @@ class Command:
                 else:
                     message = f"Chat {chat} is not allowed to perform this action."
                     log.warning(message)
-                    await clazz.mute_user(chat_id=current_chat.id, user=current_user, until_date=timedelta(minutes=15),
-                                          reason=message)
+                    await clazz.mute_user(
+                        chat_id=current_chat.id,
+                        user=current_user,
+                        until_date=timedelta(minutes=15),
+                        reason=message,
+                    )
                     exception = PermissionError()
 
             if self.chat_admin:
@@ -131,12 +146,20 @@ class Command:
                     log.debug("Execute function due to coming from a private chat")
                 elif current_user in administrators:
                     log.debug(
-                        f"User ({current_user.name}) is a chat admin and therefore allowed to perform this action, executing")
-                elif update.effective_user.name == "@GroupAnonymousBot" and update.effective_user.is_bot and update.effective_user.link == "https://t.me/GroupAnonymousBot" and update.effective_user.first_name == "Group" and update.effective_user.full_name == "Group":
+                        f"User ({current_user.name}) is a chat admin and therefore allowed to perform this action, executing"
+                    )
+                elif (
+                    update.effective_user.name == "@GroupAnonymousBot"
+                    and update.effective_user.is_bot
+                    and update.effective_user.link == "https://t.me/GroupAnonymousBot"
+                    and update.effective_user.first_name == "Group"
+                    and update.effective_user.full_name == "Group"
+                ):
                     log.debug("anonymous mode for admins is allowed")
                 else:
                     log.error(
-                        f"User ({current_user.name}) isn't a chat_admin and is not allowed to perform this action.")
+                        f"User ({current_user.name}) isn't a chat_admin and is not allowed to perform this action."
+                    )
                     exception = PermissionError()
 
             if update.effective_message:
@@ -146,7 +169,10 @@ class Command:
             # gatekeeping
             if current_chat.premium_users_only and update.effective_user:
                 users = [update.effective_user]
-                if update.effective_message and update.effective_message.new_chat_members:
+                if (
+                    update.effective_message
+                    and update.effective_message.new_chat_members
+                ):
                     users.extend(update.effective_message.new_chat_members)
                 for _user in users:
                     # don't kick premium members/bots
@@ -155,7 +181,9 @@ class Command:
                             log.info(f"kick {_user} from {current_chat}")
                             await clazz.kick_user(current_chat, _user.id)
                         except TelegramError as e:
-                            message = f"Couldn't remove {_user} from chat due to error ({e})"
+                            message = (
+                                f"Couldn't remove {_user} from chat due to error ({e})"
+                            )
                             log.error(message)
 
             log.debug(execution_message)
@@ -169,7 +197,8 @@ class Command:
             except PermissionError:
                 if update.effective_message:
                     await update.effective_message.reply_text(
-                        f"You ({current_user.name}) are not allowed to perform this action.")
+                        f"You ({current_user.name}) are not allowed to perform this action."
+                    )
             except Exception as e:
                 # Log for debugging purposes
                 log.error(str(e), exc_info=True)
@@ -186,7 +215,10 @@ def group(function):
     def wrapper(clz: chat.Chat, *args, **kwargs):
         log = logger.create_logger(f"group_wrapper_{function.__name__}")
         log.debug("Start")
-        if not (hasattr(clz, "type") and (isinstance(clz.type, str) or isinstance(clz.type, chat.ChatType))):
+        if not (
+            hasattr(clz, "type")
+            and (isinstance(clz.type, str) or isinstance(clz.type, chat.ChatType))
+        ):
             message = "group decorator can only be used on a class which has a `type` attribute of type `str` or `chat.ChatType`."
             log.error(message)
             raise TypeError(message)

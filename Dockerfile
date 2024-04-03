@@ -1,18 +1,15 @@
-FROM python:3.12-slim
+FROM ghcr.io/blindfoldedsurgery/poetry:2.0.0-pipx-3.12-bookworm
 
-WORKDIR /usr/src/app
+COPY [ "poetry.toml", "poetry.lock", "pyproject.toml", "./" ]
 
-ENV PYTHONUNBUFFERED=1
+RUN poetry install --no-interaction --ansi --only=main --no-root
+
+# We don't want the tests
+COPY src/telegram_bot ./src/telegram_bot
+
+RUN poetry install --no-interaction --ansi --only-root
 
 ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION
 
-ADD requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-ADD telegram_bot telegram_bot
-ADD main.py .
-ADD reminder.py .
-ADD setup.py .
-
-CMD python -B -O main.py
+ENTRYPOINT [ "tini", "--", "poetry", "run", "python", "-m", "telegram_bot.main" ]
