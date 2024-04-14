@@ -3,7 +3,7 @@ deployment:
   image: ghcr.io/preparingforexams/hhh-diff-bot:__TAG__
   imagePullPolicy: IfNotPresent
   revisionHistoryLimit: 1
-  replicas: 0
+  replicas: 1
   labels:
     app: hhhdiffbot
   requests:
