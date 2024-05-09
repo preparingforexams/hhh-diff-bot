@@ -13,7 +13,7 @@ priority = "explicit"
 [tool.poetry.dependencies]
 python = "~3.12"
 openai = "^1.16.1"
-python-telegram-bot = "~21.0"
+python-telegram-bot = "~21.1"
 requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]
