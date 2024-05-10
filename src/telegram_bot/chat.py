@@ -113,16 +113,16 @@ class Chat:
         return chat
 
     @group
-    def pin_message(
+    async def pin_message(
         self, message_id: int, disable_notifications: bool = True, unpin: bool = False
     ) -> bool:
         if unpin:
             self.logger.debug("Force unpin before pinning")
-            self.unpin_message()
+            await self.unpin_message()
 
         successful_pin = False
         try:
-            successful_pin = self.bot.pin_chat_message(
+            successful_pin = await self.bot.pin_chat_message(
                 chat_id=self.id,
                 message_id=message_id,
                 disable_notification=disable_notifications,
@@ -140,10 +140,10 @@ class Chat:
         return successful_pin
 
     @group
-    def unpin_message(self) -> bool:
+    async def unpin_message(self) -> bool:
         successful_unpin = False
         try:
-            successful_unpin = self.bot.unpin_chat_message(chat_id=self.id)
+            successful_unpin = await self.bot.unpin_chat_message(chat_id=self.id)
         except TelegramError as e:
             self.logger.error(f"Couldn't unpin message due to error: {e}")
 
