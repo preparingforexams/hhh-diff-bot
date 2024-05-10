@@ -228,4 +228,6 @@ class Chat:
 
     async def permissions(self) -> ChatPermissions:
         chat = await self.bot.get_chat(self.id)
-        return chat.permissions
+        if permissions := chat.permissions:
+            return permissions
+        raise ValueError("Missing chat.permissions despite library docs")
