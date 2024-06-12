@@ -30,7 +30,7 @@ jobs:
 
   deploy:
     runs-on: born-prep
-    container: ghcr.io/bjoernpetersen/helm:2.1.0
+    container: ghcr.io/bjoernpetersen/helm:2.1.1
     needs:
       - build-container-image
     if: success() && github.ref_name == github.event.repository.default_branch
