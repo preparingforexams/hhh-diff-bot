@@ -20,7 +20,7 @@ requests = "^2.31.0"
 black = "^24.0.0"
 mypy = "~1.10"
 pytest = "^8.0.0"
-ruff = "0.4.10"
+ruff = "0.5.0"
 types-requests = "^2.31.0.20240403"
 
 [build-system]
