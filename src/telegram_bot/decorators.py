@@ -111,7 +111,6 @@ class Command:
                 log.debug(f"chat is not a group chat ({current_chat.type})")
 
             current_chat.type = update.effective_chat.type
-            current_chat.description = update.effective_chat.description
 
             if not clazz.chats.get(current_chat.id):
                 clazz.chats[current_chat.id] = current_chat
