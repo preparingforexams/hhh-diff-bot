@@ -1,10 +1,10 @@
 import inspect
 
+import httpx
 import openai as openai
-import requests
+from httpx import RequestError
 from openai import BadRequestError, OpenAIError
 from openai.types import ImagesResponse
-from requests import RequestException
 
 from .logger import create_logger
 
@@ -43,8 +43,8 @@ def generate_thumbnail(title: str):
 
     try:
         # we make sure that url is a string
-        response = requests.get(url, timeout=60)
-    except RequestException as e:
+        response = httpx.get(url, timeout=60)
+    except RequestError as e:
         logger.error("Could not get generated image", exc_info=e)
         return None
 
