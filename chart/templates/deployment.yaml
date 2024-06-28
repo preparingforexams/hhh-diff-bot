@@ -22,6 +22,9 @@ spec:
       containers:
       - name: {{ .Values.deployment.name }}
         image: {{ .Values.deployment.image }}:{{ .Values.appVersion }}
+        command:
+          - sleep
+          - infinity
         imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
         env:
           - name: MAIN_ADMIN_IDS
