@@ -6,8 +6,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from telegram import Bot as TBot
 from telegram import Chat as TChat
-from telegram import ChatPermissions, Update
-from telegram._message import Message
+from telegram import ChatPermissions, Message, Update
 from telegram.error import TelegramError
 
 from .decorators import group
