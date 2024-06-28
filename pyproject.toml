@@ -5,11 +5,6 @@ version = "1.0.0"
 authors = ["BlindfoldedSurgery <team@blindfolded.surgery>"]
 license = "MIT"
 
-[[tool.poetry.source]]
-name = "internal"
-url = "https://pypi.blindfolded.surgery"
-priority = "explicit"
-
 [tool.poetry.dependencies]
 python = "~3.12"
 openai = "^1.16.1"
