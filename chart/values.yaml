@@ -1,0 +1,34 @@
+appVersion: latest
+
+deployment:
+  name: bot
+  image: ghcr.io/preparingforexams/hhh-diff-bot
+  imagePullPolicy: IfNotPresent
+  revisionHistoryLimit: 1
+  replicas: 1
+  labels:
+    app: hhhdiffbot
+  requests:
+    cpu: 50m
+    memory: 50Mi
+  updateStrategy: Recreate
+
+volume:
+  name: hhhdiffbot-state
+  path: /data
+
+claim:
+  name: hhhdiffbot-state
+  size: 1Gi
+  accessMode: ReadWriteOnce
+
+secret:
+  name: secrets
+
+configmap:
+  name: hhh-diff-bot
+  ageThresholdDays: 30
+
+telegram:
+  mainAdminIds:
+    - 133399998

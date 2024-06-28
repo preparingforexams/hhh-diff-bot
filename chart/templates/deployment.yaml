@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: {{ .Values.deployment.name }}
-        image: {{ .Values.deployment.image }}
+        image: {{ .Values.deployment.image }}:{{ .Values.appVersion }}
         imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
         env:
           - name: MAIN_ADMIN_IDS

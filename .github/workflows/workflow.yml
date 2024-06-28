@@ -23,28 +23,21 @@ jobs:
     needs:
       - lint
       - test
-    uses: BlindfoldedSurgery/actions-container/.github/workflows/build-image-docker.yml@v3
+    uses: preparingforexams/actions-container/.github/workflows/build-image-kaniko.yml@v3
     with:
-      platform: 'linux/arm64'
+      runner-name-build: warp-ubuntu-latest-arm64-2x
       push-image: ${{ github.ref_name == github.event.repository.default_branch }}
 
   deploy:
-    runs-on: born-prep
-    container: ghcr.io/bjoernpetersen/helm:2.1.1
+    runs-on: ubuntu-latest
+    if: github.ref_name == github.event.repository.default_branch
     needs:
       - build-container-image
-    if: success() && github.ref_name == github.event.repository.default_branch
-    concurrency: production
     steps:
       - uses: actions/checkout@v4
-      - run: sed -i -e "s/__TELEGRAM_TOKEN__/${{ secrets.BOT_TOKEN }}/g" values.yaml
-      - run: sed -i -e "s/__BING_IMAGE_API_SEARCH_KEY__/${{ secrets.BING_IMAGE_API_SEARCH_KEY }}/g" values.yaml
-      - run: sed -i -e "s/__OPENAI_API_KEY__/${{ secrets.OPENAI_API_KEY }}/g" values.yaml
-      - run: sed -i -e "s/__TAG__/${GITHUB_SHA}/g" values.yaml
-      - uses: WyriHaximus/github-action-helm3@v4
         with:
-          exec: helm upgrade hhhdiffbot . --install --namespace=hhh-diff-bot --atomic
-          kubeconfig: '${{ secrets.BORN_KUBECONFIG_RAW }}'
+          fetch-depth: 0
+      - run: git push origin main:release
 
   clean:
     concurrency: cleanup
