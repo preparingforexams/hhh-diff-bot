@@ -10,12 +10,12 @@ jobs:
     uses: BlindfoldedSurgery/renovate-config/.github/workflows/validate.yml@main
 
   lint:
-    uses: BlindfoldedSurgery/actions-python/.github/workflows/lint.yml@v1
+    uses: BlindfoldedSurgery/actions-python/.github/workflows/lint.yml@v2
     with:
       python-version: '3.12'
 
   test:
-    uses: BlindfoldedSurgery/actions-python/.github/workflows/test.yml@v1
+    uses: BlindfoldedSurgery/actions-python/.github/workflows/test.yml@v2
     with:
       python-version: '3.12'
 
