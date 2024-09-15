@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from telegram import Bot as TBot
 from telegram import Chat as TChat
@@ -42,26 +42,26 @@ class ChatType(Enum):
 
 class Chat:
     def __init__(self, _id: str | int, bot: TBot):
-        self.logger = create_logger("chat_{}".format(_id))
+        self.logger = create_logger(f"chat_{_id}")
         self.logger.debug("Create chat")
-        self.pinned_message_id: Optional[int] = None
+        self.pinned_message_id: int | None = None
         self.id: int = int(_id)
         self.bot: TBot = bot
-        self.users: Set[User] = set()
-        self.title: Optional[str] = None
+        self.users: set[User] = set()
+        self.title: str | None = None
         self.type = ChatType.UNDEFINED
-        self.invite_link: Optional[str] = None
-        self.description: Optional[str] = None
-        self.last_chat_event_time: Optional[datetime] = None
-        self.created_message_id: Optional[int] = None
+        self.invite_link: str | None = None
+        self.description: str | None = None
+        self.last_chat_event_time: datetime | None = None
+        self.created_message_id: int | None = None
         self.premium_users_only = False
 
-    def get_user_by_id(self, _id: int) -> Optional[User]:
+    def get_user_by_id(self, _id: int) -> User | None:
         result = next(filter(lambda user: user.id == _id, self.users), None)
 
         return result
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         chat_type = (
             self.type if isinstance(self.type, ChatType) else ChatType(self.type)
         )
@@ -88,7 +88,7 @@ class Chat:
         self.users.add(user)
 
     @classmethod
-    def deserialize(cls, json_object: Dict, bot: TBot) -> Optional[Chat]:
+    def deserialize(cls, json_object: dict, bot: TBot) -> Chat | None:
         try:
             chat = Chat(json_object["id"], bot)
         except (TypeError, ValueError):
@@ -131,7 +131,7 @@ class Chat:
 
         if successful_pin:
             self.pinned_message_id = message_id
-            self.logger.debug("Successfully pinned message: {}".format(message_id))
+            self.logger.debug(f"Successfully pinned message: {message_id}")
             return True
         else:
             self.logger.warning("Pinning message failed")
@@ -161,16 +161,16 @@ class Chat:
         :raises: TelegramError Raises TelegramError if the message couldn't be sent
         :return:
         """
-        message = " | ".join(["{}: {}".format(key, val) for key, val in kwargs.items()])
+        message = " | ".join([f"{key}: {val}" for key, val in kwargs.items()])
         self.logger.info(f"Send message with: {message}")
 
         result = await self.bot.send_message(chat_id=self.id, **kwargs)
 
-        self.logger.info("Result of sending message: {}".format(result))
+        self.logger.info(f"Result of sending message: {result}")
         return result
 
     @group
-    async def administrators(self) -> Set[User]:
+    async def administrators(self) -> set[User]:
         """
         Lists all administrators in this chat.
         Skips administrators who are not in `self.users`.
@@ -178,7 +178,7 @@ class Chat:
 
         :return: Administrators in this chat Set[User]
         """
-        administrators: Set[User] = set()
+        administrators: set[User] = set()
 
         try:
             chat_administrators = await self.bot.get_chat_administrators(
@@ -203,7 +203,7 @@ class Chat:
 
         user.messages.add(update.effective_message)  # type: ignore[arg-type, union-attr]
 
-    def messages(self) -> List[Message]:
+    def messages(self) -> list[Message]:
         messages: list[Message] = []
         for user in self.users:
             messages.extend(user.messages)

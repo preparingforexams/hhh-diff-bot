@@ -1,11 +1,12 @@
 import json
 import os
 import tempfile
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from enum import Enum
 from itertools import groupby, zip_longest
 from threading import Timer
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any
 
 from telegram import ChatPermissions, Message, Update
 from telegram.constants import ParseMode
@@ -18,7 +19,7 @@ from .logger import create_logger
 from .openai import generate_thumbnail
 
 
-def grouper(iterable, n, fillvalue=None) -> Iterable[Tuple[Any, Any]]:
+def grouper(iterable, n, fillvalue=None) -> Iterable[tuple[Any, Any]]:
     """Collect data into fixed-length chunks or blocks"""
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
@@ -34,10 +35,10 @@ class SpamType(Enum):
 class Bot:
     def __init__(self, application: Application, state_filepath: str):
         self.logger = create_logger("hhh_diff_bot")
-        self.chats: Dict[int, Chat] = {}
+        self.chats: dict[int, Chat] = {}
         self.application = application
-        self.main_admin_ids: Set[int] = self._load_main_admin_ids()
-        self.state: Dict[str, Any] = {
+        self.main_admin_ids: set[int] = self._load_main_admin_ids()
+        self.state: dict[str, Any] = {
             "group_message_id": [],
             "recent_changes": [],
             "hhh_id": -1001473841450,
@@ -45,7 +46,7 @@ class Bot:
         }
         self.state_filepath = state_filepath
 
-    def _load_main_admin_ids(self) -> Set[int]:
+    def _load_main_admin_ids(self) -> set[int]:
         raw_value = os.getenv("MAIN_ADMIN_IDS")
         if not raw_value:
             self.logger.warning("MAIN_ADMIN_IDS is not set!")
@@ -135,10 +136,8 @@ class Bot:
                 e.message == "Can't demote chat creator"
                 and not permissions.can_send_messages
             ):
-                message = "Sadly, user {} couldn't be restricted due to: `{}`. Shame on {}".format(
-                    user.name, e.message, user.name
-                )
-                self.logger.debug("{}".format(message))
+                message = f"Sadly, user {user.name} couldn't be restricted due to: `{e.message}`. Shame on {user.name}"
+                self.logger.debug(f"{message}")
                 await self.send_message(
                     chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN
                 )
@@ -177,7 +176,7 @@ class Bot:
         chat_id: int,
         user: User,
         until_date: timedelta,
-        reason: Optional[str] = None,
+        reason: str | None = None,
     ) -> bool:
         if user.muted:
             return True
@@ -203,7 +202,7 @@ class Bot:
         return result
 
     def update_recent_changes(self, update: str):
-        rc: List[str] = self.state.get("recent_changes", [])
+        rc: list[str] = self.state.get("recent_changes", [])
         if len(rc) > 2:
             rc.pop()
 
@@ -223,7 +222,7 @@ class Bot:
 
     def build_hhh_group_list_text(
         self, prefix: str = "", suffix: str = ""
-    ) -> List[str]:
+    ) -> list[str]:
         """
         For now, we'll assume that chats starting with the same letter will all fit into a single message
         :param prefix: Put in front of the constructed text for the groups names
@@ -264,7 +263,7 @@ class Bot:
         return messages
 
     @property
-    def group_message_ids(self) -> List:
+    def group_message_ids(self) -> list:
         """
         This is purely for migrative purposes (str -> list)
 
@@ -279,7 +278,7 @@ class Bot:
             return value
 
     @group_message_ids.setter
-    def group_message_ids(self, value: List[str]):
+    def group_message_ids(self, value: list[str]):
         self.state["group_message_id"] = value
 
     async def delete_message(self, chat_id: str, message_id: str, *args, **kwargs):
@@ -409,7 +408,7 @@ class Bot:
             await self.update_hhh_message(chat, delete=True, create_changelog=True)
             context.chat_data.clear()  # type: ignore[union-attr]
 
-    def set_state(self, state: Dict[str, Any]) -> None:
+    def set_state(self, state: dict[str, Any]) -> None:
         self.state = state
         self.chats = {
             schat["id"]: Chat.deserialize(schat, self.application.bot)  # type: ignore[misc]
@@ -421,7 +420,7 @@ class Bot:
             chat_id=chat_id, text=text, disable_web_page_preview=True, **kwargs
         )
 
-    def _get_chat_by_title(self, title: str) -> Optional[Chat]:
+    def _get_chat_by_title(self, title: str) -> Chat | None:
         for chat in self.chats.values():
             if title == chat.title:
                 return chat
@@ -431,11 +430,11 @@ class Bot:
     @Command()
     async def show_users(
         self, update: Update, context: CallbackContext
-    ) -> Optional[Message]:
+    ) -> Message | None:
         from_chat: Chat = context.chat_data["chat"]  # type: ignore[index]
         if context.args:
             search_title = " ".join(context.args).strip()
-            chat: Optional[Chat] = self._get_chat_by_title(search_title)
+            chat: Chat | None = self._get_chat_by_title(search_title)
             if not chat:
                 return await self.send_message(
                     chat_id=from_chat.id, text="This chat doesn't exist"
@@ -443,7 +442,7 @@ class Bot:
         else:
             chat = from_chat
 
-        sorted_users: List[User] = sorted(chat.users, key=lambda _user: _user.name)
+        sorted_users: list[User] = sorted(chat.users, key=lambda _user: _user.name)
         if sorted_users:
             message = "\n".join([user.name for user in sorted_users])
         else:

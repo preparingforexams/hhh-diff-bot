@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Callable, Dict
+from collections.abc import Callable
 
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 
@@ -14,8 +14,8 @@ def _identity(x):
 def update_state(
     state_filepath: str,
     *,
-    state_mutation_function: Callable[[Dict], Dict] | None = None,
-    chat_mutation_function: Callable[[Dict], Dict] | None = None,
+    state_mutation_function: Callable[[dict], dict] | None = None,
+    chat_mutation_function: Callable[[dict], dict] | None = None,
 ):
     import json
 
@@ -36,7 +36,7 @@ def update_state(
         json.dump(state, f)
 
 
-def cleanup_state(content: Dict, **kwargs) -> Dict:
+def cleanup_state(content: dict, **kwargs) -> dict:
     dedup = content.copy()
     dedup["chats"] = []
 
