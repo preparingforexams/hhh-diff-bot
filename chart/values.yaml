@@ -19,8 +19,9 @@ volume:
 
 claim:
   name: hhhdiffbot-state
-  size: 1Gi
+  size: 100Mi
   accessMode: ReadWriteOnce
+  storageClass: longhorn
 
 secret:
   name: secrets
