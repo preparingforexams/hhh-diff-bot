@@ -11,7 +11,7 @@ statefulSet:
 claim:
   size: 100Mi
   accessMode: ReadWriteOnce
-  storageClass: longhorn
+  storageClass: longhorn-crypto
 
 secret:
   name: secrets
