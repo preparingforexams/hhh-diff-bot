@@ -39,9 +39,6 @@ spec:
       containers:
         - name: app
           image: {{ .Values.statefulSet.image }}:{{ .Values.appVersion }}
-          command:
-            - sleep
-            - infinity
           env:
             - name: MAIN_ADMIN_IDS
               value: {{ .Values.telegram.mainAdminIds | toJson | quote }}
