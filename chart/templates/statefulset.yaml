@@ -34,6 +34,8 @@ spec:
       labels:
         app: bot
     spec:
+      securityContext:
+        fsGroup: 500
       containers:
         - name: app
           image: {{ .Values.statefulSet.image }}:{{ .Values.appVersion }}
