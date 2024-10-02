@@ -1,24 +1,14 @@
 appVersion: latest
 
-deployment:
+statefulSet:
   name: bot
   image: ghcr.io/preparingforexams/hhh-diff-bot
-  imagePullPolicy: IfNotPresent
   revisionHistoryLimit: 1
-  replicas: 1
-  labels:
-    app: hhhdiffbot
   requests:
     cpu: 50m
     memory: 50Mi
-  updateStrategy: Recreate
-
-volume:
-  name: hhhdiffbot-state
-  path: /data
 
 claim:
-  name: hhhdiffbot-state
   size: 100Mi
   accessMode: ReadWriteOnce
   storageClass: longhorn
