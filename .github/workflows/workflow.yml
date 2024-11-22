@@ -42,4 +42,4 @@ jobs:
   clean:
     concurrency: cleanup
     needs: [ deploy ]
-    uses: BlindfoldedSurgery/actions-container/.github/workflows/clean.yml@v3
+    uses: BlindfoldedSurgery/actions-container/.github/workflows/clean.yml@v4
