@@ -496,13 +496,13 @@ dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments
 
 [[package]]
 name = "python-telegram-bot"
-version = "21.7"
+version = "21.8"
 description = "We have made you a wrapper you can't refuse"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "python_telegram_bot-21.7-py3-none-any.whl", hash = "sha256:aff1d7245f1b0d4d12d41c9acff74e86d7100713c2204cd02ff17f8d80d18846"},
-    {file = "python_telegram_bot-21.7.tar.gz", hash = "sha256:bc8537b77ae02531fc2ad440caafc023fd13f13cf19e592dfa1a9ff84988a012"},
+    {file = "python_telegram_bot-21.8-py3-none-any.whl", hash = "sha256:2fea8e65d97e593f47666e7de81fb15bd517100504e98ca7cb399ee6ce4f3838"},
+    {file = "python_telegram_bot-21.8.tar.gz", hash = "sha256:114437f194e32eee0651f25fb1ab1664b605e877ca33adf58547a599afe73b72"},
 ]
 
 [package.dependencies]
@@ -592,4 +592,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.13"
-content-hash = "d430f4594fec6b8018f15afaf8178c41352e64f42cc94280dc0296e5c44298e6"
+content-hash = "dd3468f10082bbfde420c67052ebefc5198eba38e5d47d9e1613fae9583389c6"

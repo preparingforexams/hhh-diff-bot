@@ -12,7 +12,7 @@ license = "MIT"
 python = "~3.13"
 httpx = "^0.28.0"
 openai = "^1.16.1"
-python-telegram-bot = "~21.7"
+python-telegram-bot = "~21.8"
 
 
 [tool.poetry.group.dev.dependencies]
