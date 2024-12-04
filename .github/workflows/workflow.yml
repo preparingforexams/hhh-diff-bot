@@ -23,7 +23,7 @@ jobs:
     needs:
       - lint
       - test
-    uses: preparingforexams/actions-container/.github/workflows/build-image-kaniko.yml@v3
+    uses: preparingforexams/actions-container/.github/workflows/build-image-kaniko.yml@v4
     with:
       runner-name-build: warp-ubuntu-latest-arm64-2x
       push-image: ${{ github.ref_name == github.event.repository.default_branch }}
