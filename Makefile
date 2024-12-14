@@ -3,10 +3,10 @@ check: lint test
 
 .PHONY: lint
 lint:
-	poetry run ruff format src/
-	poetry run ruff check --fix --show-fixes src/
-	poetry run mypy src/
+	uv run ruff format src/
+	uv run ruff check --fix --show-fixes src/
+	uv run mypy src/
 
 .PHONY: test
 test:
-	poetry run pytest src/
+	uv run pytest src/
