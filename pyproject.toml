@@ -12,7 +12,7 @@ classifiers = [
 dependencies = [
     "httpx ==0.28.*",
     "openai >=1.0.0, <2.0.0",
-    "python-telegram-bot ==21.9",
+    "python-telegram-bot ==21.10",
 ]
 
 [dependency-groups]
