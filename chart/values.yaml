@@ -6,7 +6,7 @@ statefulSet:
   revisionHistoryLimit: 1
   requests:
     cpu: 50m
-    memory: 50Mi
+    memory: 64Mi
 
 claim:
   size: 100Mi
