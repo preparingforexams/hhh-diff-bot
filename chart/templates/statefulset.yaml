@@ -34,6 +34,7 @@ spec:
       labels:
         app: bot
     spec:
+      serviceAccountName: bot
       securityContext:
         runAsNonRoot: true
         fsGroup: 500
