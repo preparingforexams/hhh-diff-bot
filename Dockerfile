@@ -7,7 +7,7 @@ RUN apt-get update -qq \
 RUN groupadd --system --gid 500 app
 RUN useradd --system --uid 500 --gid app --create-home --home-dir /app app
 
-USER app
+USER 500
 WORKDIR /app
 
 COPY [ "uv.lock", "pyproject.toml", "./" ]

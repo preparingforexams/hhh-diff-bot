@@ -3,7 +3,6 @@ appVersion: latest
 statefulSet:
   name: bot
   image: ghcr.io/preparingforexams/hhh-diff-bot
-  revisionHistoryLimit: 1
   requests:
     cpu: 50m
     memory: 64Mi

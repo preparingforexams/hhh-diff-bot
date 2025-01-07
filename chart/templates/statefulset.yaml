@@ -12,7 +12,7 @@ metadata:
   name: bot
 spec:
   replicas: 1
-  revisionHistoryLimit: {{ .Values.statefulSet.revisionHistoryLimit }}
+  revisionHistoryLimit: 0
   selector:
     matchLabels:
       app: bot
@@ -35,7 +35,10 @@ spec:
         app: bot
     spec:
       securityContext:
+        runAsNonRoot: true
         fsGroup: 500
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: app
           image: {{ .Values.statefulSet.image }}:{{ .Values.appVersion }}
@@ -48,6 +51,10 @@ spec:
           volumeMounts:
             - mountPath: "/data"
               name: state
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
           resources:
             requests:
               cpu: {{ .Values.statefulSet.requests.cpu }}
