@@ -250,14 +250,14 @@ wheels = [
 
 [[package]]
 name = "python-telegram-bot"
-version = "21.10"
+version = "21.11.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/bc/3a00800cc495e3b4c031c5402faa2fc36b6411438d0fd91175f0c8f59471/python_telegram_bot-21.10.tar.gz", hash = "sha256:40481a8c4814ce2e530a21ce45d389695b0b210c5fb9dc75b8529aba8c9e76f8", size = 438289 }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/74/3ebdc3ee2c323b4577fcc57542f71aa064ac9dac154af0c2f5805e1b9fbd/python_telegram_bot-21.11.1.tar.gz", hash = "sha256:2abda5202f27a838f35e8140e5292af0f4f8fad6c2e5123b2defadd5f4e8ca02", size = 442624 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/2f/b0823ff9ff7bca716ff05b8bfb3e1f058e0dd1f89fc8ec838e5467c1ffdd/python_telegram_bot-21.10-py3-none-any.whl", hash = "sha256:c874d2461d6bfa4b05c314cf6116cf1dafe537689aa8249924dd988603b6ba21", size = 669463 },
+    { url = "https://files.pythonhosted.org/packages/27/3b/8f6372e580ba4514335873f64924eb80b80c3d3f8359c2bb2e07bb6d01b9/python_telegram_bot-21.11.1-py3-none-any.whl", hash = "sha256:17f933a7a0569f519d9b672e06d71c29ab3688f1ec575ba59a3ca37922481113", size = 676058 },
 ]
 
 [[package]]
@@ -315,7 +315,7 @@ dev = [
 requires-dist = [
     { name = "httpx", specifier = "==0.28.*" },
     { name = "openai", specifier = ">=1.0.0,<2.0.0" },
-    { name = "python-telegram-bot", specifier = "==21.10" },
+    { name = "python-telegram-bot", specifier = "==21.11.1" },
 ]
 
 [package.metadata.requires-dev]
