@@ -34,6 +34,7 @@ spec:
       labels:
         app: bot
     spec:
+      terminationGracePeriodSeconds: 2
       serviceAccountName: bot
       securityContext:
         runAsNonRoot: true
@@ -43,6 +44,10 @@ spec:
       containers:
         - name: app
           image: {{ .Values.statefulSet.image }}:{{ .Values.appVersion }}
+          command:
+            - sleep
+          args:
+            - infinity
           env:
             - name: MAIN_ADMIN_IDS
               value: {{ .Values.telegram.mainAdminIds | toJson | quote }}
