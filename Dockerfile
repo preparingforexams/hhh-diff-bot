@@ -5,7 +5,7 @@ ARG DEBIAN_VERSION="bookworm"
 ARG PYTHON_VERSION="3.13"
 
 # renovate: datasource=pypi depName=uv versioning=semver-coerced
-ARG UV_VERSION="0.6.9"
+ARG UV_VERSION="0.6.10"
 
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}-python${PYTHON_VERSION}-${DEBIAN_VERSION}-slim
 
