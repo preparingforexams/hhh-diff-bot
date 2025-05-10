@@ -16,7 +16,6 @@ from telegram.ext import Application, CallbackContext
 from .chat import Chat, User
 from .decorators import Command
 from .logger import create_logger
-from .openai import generate_thumbnail
 
 
 def grouper(iterable, n, fillvalue=None) -> Iterable[tuple[Any, Any]]:
@@ -795,28 +794,6 @@ class Bot:
     async def noop(self, update: Update, context: CallbackContext):
         self.logger.debug(update)
         pass
-
-    @Command()
-    async def set_chat_photo(self, update: Update, context: CallbackContext):
-        chat = context.chat_data["chat"]  # type: ignore[index]
-
-        overwrite = "overwrite" in context.args  # type: ignore[operator]
-        if not overwrite:
-            if (await self.application.bot.get_chat(chat.id)).photo:
-                msg = "will not update photo since there already is one present, use `set_photo overwrite` instead"
-                return await self.send_message(chat_id=chat.id, text=msg)
-
-        thumbnail = generate_thumbnail(chat.title)
-        if not thumbnail:
-            return await self.send_message(
-                chat_id=chat.id, text="failed to generate photo"
-            )
-        try:
-            return await self.application.bot.set_chat_photo(chat.id, thumbnail)
-        except BadRequest as e:
-            return await self.send_message(
-                chat_id=chat.id, text=f"failed to update photo: {e}"
-            )
 
     @Command()
     async def set_premium_users_only(self, update: Update, context: CallbackContext):
