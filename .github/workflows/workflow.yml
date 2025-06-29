@@ -35,10 +35,17 @@ jobs:
 
   post-build-container-image:
     runs-on: ubuntu-24.04
-    if: github.event_name == 'pull_request'
+    if: "!cancelled() && github.event_name == 'pull_request'"
     needs: build-container-image
     steps:
-      - run: echo "All images built"
+      - run: |
+          if [ "true" == "${{ contains(needs.*.result, 'failure') }}" ]
+          then
+            echo "A required job failed"
+            exit 1
+          else
+            echo "All required jobs passed"
+          fi
 
   deploy:
     runs-on: ubuntu-24.04
